@@ -1,0 +1,99 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+// set to 'bazel', 'cmake', 'makefile', 'none'
+def nativeBuildSystem = 'cmake'
+
+project.buildDir = 'gradleBuild'
+getProject().setBuildDir('gradleBuild')
+
+// import DownloadModels task
+//Project directory is location of this build file.
+//currently: {PROJECT_ROOT}/app/
+project.ext.ASSET_DIR = getProjectDir().toString() + '/assets'
+//project.ext.TMP_DIR   = project.buildDir.toString() + '/downloads'
+// Controls output directory in APK and CPU type for Bazel builds.
+// NOTE: Does not affect the Makefile build target API (yet), which currently
+// assumes armeabi-v7a. If building with make, changing this will require
+// editing the Makefile as well.
+// The CMake build has only been tested with armeabi-v7a; others may not work.
+//def cpuType = 'armeabi-v7a'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "com.yeolabgt.mahmoodms.straingauge"
+        minSdkVersion 22
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++14"
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+    configurations.all {
+        resolutionStrategy.force 'com.google.code.findbugs:jsr305:1.3.9'
+    }
+    //For TF stuff:
+    lintOptions {
+        abortOnError false
+        disable 'RestrictedApi'
+    }
+
+    sourceSets {
+        main {
+            java {
+                srcDir 'app/src'
+            }
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            res.srcDirs = ['src/main/res']
+            assets.srcDirs = [project.ext.ASSET_DIR]
+        }
+
+        debug.setRoot('build-types/debug')
+        release.setRoot('build-types/release')
+    }
+}
+
+// Download default models; if you wish to use your own models then
+// place them in the "assets" directory and comment out this line.
+
+dependencies {
+    //Added
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation files('libs/opencsv-3.7.jar')
+    implementation project(':actblelibrary')
+    implementation 'com.androidplot:androidplot-core:1.5.1'
+    implementation 'com.google.guava:guava:23.0-android'
+
+    //Original
+    testImplementation 'junit:junit:4.12'
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support:preference-v7:26.1.0'
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    //TensorFlow
+    if (nativeBuildSystem == 'cmake' || nativeBuildSystem == 'none') {
+        implementation 'org.tensorflow:tensorflow-android:+'
+    }
+}
