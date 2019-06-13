@@ -25,7 +25,7 @@ project.ext.ASSET_DIR = getProjectDir().toString() + '/assets'
 android {
     compileSdkVersion 26
     defaultConfig {
-        applicationId "com.yeolabgt.mahmoodms.straingauge"
+        applicationId "com.yeolabgt.mahmoodms.ppg"
         minSdkVersion 22
         targetSdkVersion 26
         versionCode 1

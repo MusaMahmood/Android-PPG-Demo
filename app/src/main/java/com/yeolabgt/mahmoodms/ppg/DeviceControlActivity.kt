@@ -255,15 +255,15 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         mMotionDataPlotAdapter?.xyPlot!!.addSeries(mGraphAdapterMotionAY?.series, mGraphAdapterMotionAY?.lineAndPointFormatter)
         mMotionDataPlotAdapter?.xyPlot!!.addSeries(mGraphAdapterMotionAZ?.series, mGraphAdapterMotionAZ?.lineAndPointFormatter)
         val xyPlotList = listOf(mTimeDomainPlotAdapterCh1?.xyPlot, mMotionDataPlotAdapter?.xyPlot)
-        mRedrawer = Redrawer(xyPlotList, 30f, false)
+        mRedrawer = Redrawer(xyPlotList, 24f, false)
         mRedrawer!!.start()
         mGraphInitializedBoolean = true
 
-        mGraphAdapterMotionAX?.setxAxisIncrement(0.032)
+        mGraphAdapterMotionAX?.setxAxisIncrement(0.004)
         mGraphAdapterMotionAX?.setSeriesHistoryDataPoints(375)
-        mGraphAdapterMotionAY?.setxAxisIncrement(0.032)
+        mGraphAdapterMotionAY?.setxAxisIncrement(0.004)
         mGraphAdapterMotionAY?.setSeriesHistoryDataPoints(375)
-        mGraphAdapterMotionAZ?.setxAxisIncrement(0.032)
+        mGraphAdapterMotionAZ?.setxAxisIncrement(0.004)
         mGraphAdapterMotionAZ?.setSeriesHistoryDataPoints(375)
 
         mGraphAdapterCh1!!.setxAxisIncrementFromSampleRate(mSampleRate)
