@@ -2,10 +2,9 @@ package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
 import java.util.*
 
-internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFirst: Boolean = true, saveData: Boolean = true) :
+internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, samplingRate: Int = 250, MSBFirst: Boolean = true, saveData: Boolean = true) :
         BaseDataCollector(addressMac, uuid) {
-    var totalDataPointsReceived: Int = 0
-    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate = 250)
+    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate = samplingRate)
     var dataBufferAccY: DataBuffer = DataBuffer(bufferSize)
     var dataBufferAccZ: DataBuffer = DataBuffer(bufferSize)
     var dataBufferGyrX: DataBuffer = DataBuffer(bufferSize)
@@ -18,7 +17,7 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFi
     init {
         Companion.MSBFirst = MSBFirst
         if (saveData) {
-            dataSaver = DataSaver("/MotionData", "ICMData", addressMac, samplingRate = 250.0)
+            dataSaver = DataSaver("/MotionData", "ICMData", addressMac, samplingRate = samplingRate)
         }
     }
 
@@ -84,13 +83,6 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFi
         fun bytesToDoubleMPUGyro(a1: Byte, a2: Byte): Double {
             val unsigned: Int = unsignedBytesToInt(a1, a2, MSBFirst)
             return unsignedToSigned16bit(unsigned).toDouble() / 32767.0 * gyroRange
-        }
-
-        private fun unsignedToSigned16bit(unsigned: Int): Int {
-            return if (unsigned and 0x8000 != 0)
-                -1 * (0x8000 - (unsigned and 0x8000 - 1))
-            else
-                unsigned
         }
     }
 }

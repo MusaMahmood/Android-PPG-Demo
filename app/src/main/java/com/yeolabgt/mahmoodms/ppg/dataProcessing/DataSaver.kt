@@ -9,7 +9,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class DataSaver(directoryName: String, dataType: String, addressMac: String, samplingRate: Double, var splitFilesAfter: Int = 0) {
+internal class DataSaver(directoryName: String, dataType: String, addressMac: String, samplingRate: Int, splitFilesAfter: Int = 0) {
     var fileName: String
     var file: File? = null
     private var csvWriter: CSVWriter? = null
@@ -25,9 +25,9 @@ internal class DataSaver(directoryName: String, dataType: String, addressMac: St
 
     init {
         fileName = if (splitFiles) {
-            "${dataType}_${addressMac.replace(":", "")}_${mTimeStamp}_${samplingRate.toInt()}_" + "$fileNumber".padStart(3)
+            "${dataType}_${addressMac.replace(":", "")}_${mTimeStamp}_${samplingRate}_" + "$fileNumber".padStart(3)
         } else {
-            "${dataType}_${addressMac.replace(":", "")}_${mTimeStamp}_${samplingRate.toInt()}"
+            "${dataType}_${addressMac.replace(":", "")}_${mTimeStamp}_${samplingRate}"
         }
         createNewFile(directoryName, fileName)
     }

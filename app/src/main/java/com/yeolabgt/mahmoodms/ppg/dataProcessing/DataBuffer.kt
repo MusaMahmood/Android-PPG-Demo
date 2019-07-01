@@ -5,7 +5,6 @@ import com.google.common.primitives.Doubles
 open class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, var samplingRate: Int = 0) {
     // Buffer for graphing
     var dataBufferDoubles: DoubleArray? = null
-//    private var currentGraphIndex: Int = 0
     // For Timestamps:
     private val increment = 1/samplingRate.toDouble()
     var timeStampsDoubles: DoubleArray? = null
@@ -16,18 +15,12 @@ open class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean 
     var classificationBuffer: DoubleArray? = null
 
     init {
-//        this.currentGraphIndex = 0
-
         if (slideBufferSize != 0) {
             enableSlideBuffer(slideBufferSize)
         } else {
             disableSlideBuffer()
         }
     }
-
-//    fun getCurrentIndexAndIncrement(): Int {
-//        return this.currentGraphIndex++
-//    }
 
     private fun enableSlideBuffer(bufferSize: Int) {
         this.slideBufferEnabled = true

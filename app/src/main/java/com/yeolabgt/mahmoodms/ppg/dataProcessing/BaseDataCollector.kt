@@ -13,9 +13,11 @@ open class BaseDataCollector(addressMac: String, uuid: UUID) {
     // Metrics
     var totalBytesRecieved: Long = 0
     var totalPacketsRecieved: Int = 0
+    var totalDataPointsReceived: Long = 0
     // Identifying info
     val mAddress: String
     val mUUID: UUID
+
 
     init {
         this.packetGraphingCounter = 0
@@ -42,6 +44,13 @@ open class BaseDataCollector(addressMac: String, uuid: UUID) {
     }
 
     companion object {
+        fun unsignedToSigned16bit(unsigned: Int): Int {
+            return if (unsigned and 0x8000 != 0)
+                -1 * (0x8000 - (unsigned and 0x8000 - 1))
+            else
+                unsigned
+        }
+
         fun unsignedBytesToInt(b0: Byte, b1: Byte, MSBFirst: Boolean): Int {
             return if (MSBFirst)
                 (unsignedByteToInt(b0) shl 8) + unsignedByteToInt(b1)

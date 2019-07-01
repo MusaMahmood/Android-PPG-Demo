@@ -31,6 +31,7 @@ import com.androidplot.util.Redrawer
 import com.yeolabgt.mahmoodms.actblelibrary.ActBle
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.DataBuffer
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.MotionData
+import com.yeolabgt.mahmoodms.ppg.dataProcessing.PPGData
 
 import java.io.IOException
 import java.util.*
@@ -66,17 +67,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var menu: Menu? = null
     //Data throughput counter
     private var mLastTime: Long = 0
-    private var mLastTime2: Long = 0
     private var points = 0
-    private var points2 = 0
     private val mTimerHandler = Handler()
     private var mTimerEnabled = false
     //Data Variables:
     private val batteryWarning = 20
     private var dataRate: Double = 0.toDouble()
-    //Play Sound:
-
-
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,10 +133,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         // TODO: add all files from DataChannels.
         val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file)
         files.add(uii)
-//        if(mSaveFileMPU!=null) {
-//            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mSaveFileMPU!!.file)
-//            files.add(uii2)
-//        }
+        if(mPPG!=null) {
+            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mPPG?.dataSaver?.file)
+            files.add(uii2)
+        }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
         exportData.putExtra(Intent.EXTRA_SUBJECT, "PPG/ICM Sensor Data Export Details")
         exportData.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
@@ -152,6 +148,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private fun terminateDataFileWriter() {
         //TODO: Terminate all files
         mICM?.dataSaver?.terminateDataFileWriter()
+        mPPG?.dataSaver?.terminateDataFileWriter()
     }
 
     public override fun onResume() {
@@ -208,42 +205,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     mSampleRate = 500
                 }
                 else -> {
-//                    TODO: Change to 1 or 4 Hz
                     mSampleRate = 50
                 }
             }
             Log.e(TAG, "mSampleRate: " + mSampleRate + "Hz")
             if (!mGraphInitializedBoolean) setupGraph()
-//            createNewFile()
         }
         mBleInitializedBoolean = true
     }
-
-//    private fun createNewFile() {
-//        val directory = "/PPGData"
-//        val fileNameTimeStamped = "PPGData_" + mTimeStamp + "_" + mSampleRate.toString() + "Hz"
-//        if (mPrimarySaveDataFile == null) {
-//            Log.e(TAG, "fileTimeStamp: " + fileNameTimeStamped)
-//            mPrimarySaveDataFile = SaveDataFile(directory, fileNameTimeStamped,
-//                    16, 1.toDouble() / mSampleRate, true, false)
-//        } else if (!mPrimarySaveDataFile!!.initialized) {
-//            Log.e(TAG, "New Filename: " + fileNameTimeStamped)
-//            mPrimarySaveDataFile?.createNewFile(directory, fileNameTimeStamped)
-//        }
-//    }
-
-//    private fun createNewFileMPU() {
-//        val directory = "/MPUData"
-//        val fileNameTimeStamped = "MPUData_" + mTimeStamp
-//        if (mSaveFileMPU == null) {
-//            Log.e(TAG, "fileTimeStamp: " + fileNameTimeStamped)
-//            mSaveFileMPU = SaveDataFile(directory, fileNameTimeStamped,
-//                    16, 0.032, true, false)
-//        } else if (!mSaveFileMPU!!.initialized) {
-//            Log.e(TAG, "New Filename: " + fileNameTimeStamped)
-//            mSaveFileMPU?.createNewFile(directory, fileNameTimeStamped)
-//        }
-//    }
 
     private fun setupGraph() {
         // Initialize our XYPlot reference:
@@ -374,9 +343,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             //UI Stuff:
             val chSel = PreferencesFragment.channelSelect(context)
             //File Save Stuff
-//            val saveTimestamps = PreferencesFragment.saveTimestamps(context)
-//            val precision = (if (PreferencesFragment.setBitPrecision(context)) 64 else 32).toShort()
-//            val saveClass = PreferencesFragment.saveClass(context)
             mTimeDomainPlotAdapterCh1!!.xyPlot?.redraw()
             mChannelSelect!!.isChecked = chSel
             mGraphAdapterCh1!!.plotData = chSel
@@ -431,6 +397,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 if (AppConstant.SERVICE_STRAIN_GAUGE == service.uuid) {
                     if (service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE), true)
+                        mPPG = PPGData(0, gatt.device.address, service.uuid)
                     }
                 }
 
@@ -479,36 +446,27 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
+            mPPG?.handleNewData(data)
+            if (mPPG?.packetGraphingCounter?.toInt() == 4) {
+                addToGraphBuffer(mGraphAdapterCh1!!, mPPG?.dataBuffer!!, mPPG!!.dataBuffer.timeStampsDoubles!!)
+                mPPG?.saveAndResetBuffers()
+            }
         }
-
-//        if (AppConstant.CHAR_EEG_CH1_SIGNAL == characteristic.uuid) {
-//            if (!mCh1!!.chEnabled) mCh1!!.chEnabled = true
-//            val mNewEEGdataBytes = characteristic.value
-//            getDataRateBytes(mNewEEGdataBytes.size)
-//            mCh1!!.handleNewData(mNewEEGdataBytes)
-//            addToGraphBuffer(mCh1!!, mGraphAdapterCh1)
-//            mPrimarySaveDataFile!!.writeToDisk(mCh1!!.characteristicDataPacketBytes)
-//        }
 
         if (AppConstant.CHAR_MPU_COMBINED == characteristic.uuid) {
             val dataBytesMPU = characteristic.value
             getDataRateBytes(dataBytesMPU.size) //+=240
             mICM?.handleNewData(dataBytesMPU)
-            if (mICM?.packetGraphingCounter?.toInt() == 2) { // Plot and reset
-                addToGraphBufferMPU(mGraphAdapterMotionAX!!, mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                addToGraphBufferMPU(mGraphAdapterMotionAY!!, mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                addToGraphBufferMPU(mGraphAdapterMotionAZ!!, mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+            if (mICM?.packetGraphingCounter?.toInt() == 8) { // Plot and reset
+                addToGraphBuffer(mGraphAdapterMotionAX!!, mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBuffer(mGraphAdapterMotionAY!!, mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBuffer(mGraphAdapterMotionAZ!!, mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
                 mICM?.saveAndResetBuffers()
             }
-//            mSaveFileMPU!!.exportDataWithTimestampMPU(mMPU!!.characteristicDataPacketBytes)
-//            if (mSaveFileMPU!!.mLinesWrittenCurrentFile > 1048576) {
-//                mSaveFileMPU!!.terminateDataFileWriter()
-//                createNewFileMPU()
-//            }
         }
     }
 
-    private fun addToGraphBufferMPU(graphAdapter: GraphAdapter, dataBuffer: DataBuffer, dataXValues: DoubleArray) {
+    private fun addToGraphBuffer(graphAdapter: GraphAdapter, dataBuffer: DataBuffer, dataXValues: DoubleArray) {
         for (i in 0 until dataBuffer.dataBufferDoubles!!.size) {
             graphAdapter.addDataPointTimeDomain(dataXValues[i], dataBuffer.dataBufferDoubles!![i])
         }
@@ -526,17 +484,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 val s = "$dataRate Bytes/s"
                 mDataRate!!.text = s
             }
-        }
-    }
-
-    private fun getDataRateBytes2(bytes: Int) {
-        val mCurrentTime = System.currentTimeMillis()
-        points2 += bytes
-        if (mCurrentTime > mLastTime2 + 3000) {
-            val datarate2 = (points2 / 3).toDouble()
-            points2 = 0
-            mLastTime2 = mCurrentTime
-            Log.e(" DataRate 2(MPU):", "$datarate2 Bytes/s")
         }
     }
 
@@ -694,12 +641,11 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         const val HZ = "0 Hz"
         private val TAG = DeviceControlActivity::class.java.simpleName
         var mRedrawer: Redrawer? = null
-        // Power Spectrum Graph Data:
+
         private var mSampleRate = 250
         //Data Channel Classes
         internal var mICM: MotionData? = null
-        var mSSVEPClass = 0.0
-        //Save Data File
+        internal var mPPG: PPGData? = null
 
         init {
             System.loadLibrary("ecg-lib")
