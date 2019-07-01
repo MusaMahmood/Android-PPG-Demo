@@ -4,6 +4,7 @@ import android.os.Environment
 import android.util.Log
 
 import com.opencsv.CSVWriter
+import com.yeolabgt.mahmoodms.ppg.dataProcessing.MotionData
 
 import java.io.File
 import java.io.FileWriter
@@ -85,12 +86,12 @@ constructor(directory: String, fileName: String, byteResolution: Int, increment:
      */
     fun exportDataWithTimestampMPU(bytes: ByteArray?) {
         for (i in 0 until bytes!!.size / 12) {
-            val ax = DataChannel.bytesToDoubleMPUAccel(bytes[12 * i], bytes[12 * i + 1])
-            val ay = DataChannel.bytesToDoubleMPUAccel(bytes[12 * i + 2], bytes[12 * i + 3])
-            val az = DataChannel.bytesToDoubleMPUAccel(bytes[12 * i + 4], bytes[12 * i + 5])
-            val gx = DataChannel.bytesToDoubleMPUGyro(bytes[12 * i + 6], bytes[12 * i + 7])
-            val gy = DataChannel.bytesToDoubleMPUGyro(bytes[12 * i + 8], bytes[12 * i + 9])
-            val gz = DataChannel.bytesToDoubleMPUGyro(bytes[12 * i + 10], bytes[12 * i + 11])
+            val ax = MotionData.bytesToDoubleMPUAccel(bytes[12 * i], bytes[12 * i + 1])
+            val ay = MotionData.bytesToDoubleMPUAccel(bytes[12 * i + 2], bytes[12 * i + 3])
+            val az = MotionData.bytesToDoubleMPUAccel(bytes[12 * i + 4], bytes[12 * i + 5])
+            val gx = MotionData.bytesToDoubleMPUGyro(bytes[12 * i + 6], bytes[12 * i + 7])
+            val gy = MotionData.bytesToDoubleMPUGyro(bytes[12 * i + 8], bytes[12 * i + 9])
+            val gz = MotionData.bytesToDoubleMPUGyro(bytes[12 * i + 10], bytes[12 * i + 11])
             exportDataDouble(ax, ay, az, gx, gy, gz)
         }
     }
@@ -103,13 +104,13 @@ constructor(directory: String, fileName: String, byteResolution: Int, increment:
         for (ch in 0 until len) { // each channel
             if (this.resolutionBits == 16) {
                 for (dp in 0 until byteArrays[ch]!!.size / 2) { // each datapoint
-                    floats[ch][dp] = DataChannel.bytesToFloat32(byteArrays[ch]!![2*dp],
-                            byteArrays[ch]!![2 * dp + 1])
+//                    floats[ch][dp] = DataChannel.bytesToFloat32(byteArrays[ch]!![2*dp],
+//                            byteArrays[ch]!![2 * dp + 1])
                 }
             } else if (this.resolutionBits == 24) {
                 for (dp in 0 until byteArrays[ch]!!.size / 3) {
-                    floats[ch][dp] = DataChannel.bytesToFloat32(byteArrays[ch]!![3 * dp],
-                            byteArrays[ch]!![3 * dp + 1], byteArrays[ch]!![3 * dp + 2])
+//                    floats[ch][dp] = DataChannel.bytesToFloat32(byteArrays[ch]!![3 * dp],
+//                            byteArrays[ch]!![3 * dp + 1], byteArrays[ch]!![3 * dp + 2])
                 }
             }
         }
@@ -127,7 +128,7 @@ constructor(directory: String, fileName: String, byteResolution: Int, increment:
             else Array(len) {DoubleArray(byteArrays[0]!!.size/3)}
         for (ch in 0 until len) { // each channel
             for (dp in 0 until byteArrays[ch]!!.size / 2) { // each datapoint
-                doubles[ch][dp] = DataChannel.bytesToDouble14bit(byteArrays[ch]!![2*dp + 1], byteArrays[ch]!![2 * dp])
+//                doubles[ch][dp] = DataChannel.bytesToDouble14bit(byteArrays[ch]!![2*dp + 1], byteArrays[ch]!![2 * dp])
             }
         }
         try {

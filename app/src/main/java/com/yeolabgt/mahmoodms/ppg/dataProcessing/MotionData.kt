@@ -1,0 +1,89 @@
+package com.yeolabgt.mahmoodms.ppg.dataProcessing
+
+import java.util.*
+
+internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFirst: Boolean = true) :
+        BaseDataCollector(addressMac, uuid) {
+    var totalDataPointsReceived: Int = 0
+    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferAccY: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferAccZ: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferGyrX: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferGyrY: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferGyrZ: DataBuffer = DataBuffer(bufferSize)
+
+    // Parameters
+    init {
+        Companion.MSBFirst = MSBFirst
+    }
+
+    fun handleNewData(bytes: ByteArray) {
+        handleNewPacket(bytes)
+        val tempDoubleArrayAccX = DoubleArray(bytes.size/12)
+        val tempDoubleArrayAccY = DoubleArray(bytes.size/12)
+        val tempDoubleArrayAccZ = DoubleArray(bytes.size/12)
+        val tempDoubleArrayGyrX = DoubleArray(bytes.size/12)
+        val tempDoubleArrayGyrY = DoubleArray(bytes.size/12)
+        val tempDoubleArrayGyrZ = DoubleArray(bytes.size/12)
+        for (i in 0 until bytes.size / 12) {
+            tempDoubleArrayAccX[i] = bytesToDoubleMPUAccel(bytes[12 * i + 0], bytes[12 * i + 1])
+            tempDoubleArrayAccY[i] = bytesToDoubleMPUAccel(bytes[12 * i + 2], bytes[12 * i + 3])
+            tempDoubleArrayAccZ[i] = bytesToDoubleMPUAccel(bytes[12 * i + 4], bytes[12 * i + 5])
+            tempDoubleArrayGyrX[i] = bytesToDoubleMPUGyro(bytes[12 * i + 6], bytes[12 * i + 7])
+            tempDoubleArrayGyrY[i] = bytesToDoubleMPUGyro(bytes[12 * i + 8], bytes[12 * i + 9])
+            tempDoubleArrayGyrZ[i] = bytesToDoubleMPUGyro(bytes[12 * i + 10], bytes[12 * i + 11])
+        }
+        this.dataBufferAccX.addToBuffer(tempDoubleArrayAccX)
+        this.dataBufferAccY.addToBuffer(tempDoubleArrayAccY)
+        this.dataBufferAccZ.addToBuffer(tempDoubleArrayAccZ)
+        this.dataBufferGyrX.addToBuffer(tempDoubleArrayGyrX)
+        this.dataBufferGyrY.addToBuffer(tempDoubleArrayGyrY)
+        this.dataBufferGyrZ.addToBuffer(tempDoubleArrayGyrZ)
+        totalDataPointsReceived += bytes.size / 12
+    }
+
+    fun setGyroRange(range: Double) {
+        gyroRange = range
+    }
+
+    fun setAccelRange(range: Double) {
+        accelRange = range
+    }
+
+    fun setMSB(msb: Boolean) {
+        MSBFirst = msb
+    }
+
+    fun resetBuffers() {
+        this.resetBuffer()
+        this.dataBufferAccX.resetBuffer()
+        this.dataBufferAccY.resetBuffer()
+        this.dataBufferAccZ.resetBuffer()
+        this.dataBufferGyrX.resetBuffer()
+        this.dataBufferGyrY.resetBuffer()
+        this.dataBufferGyrZ.resetBuffer()
+    }
+
+    companion object {
+        private var MSBFirst: Boolean = false
+        var gyroRange = 4000.0
+        var accelRange = 16.0
+
+        fun bytesToDoubleMPUAccel(a1: Byte, a2: Byte): Double {
+            val unsigned: Int = unsignedBytesToInt(a1, a2, MSBFirst)
+            return unsignedToSigned16bit(unsigned).toDouble() / 32767.0 * accelRange
+        }
+
+        fun bytesToDoubleMPUGyro(a1: Byte, a2: Byte): Double {
+            val unsigned: Int = unsignedBytesToInt(a1, a2, MSBFirst)
+            return unsignedToSigned16bit(unsigned).toDouble() / 32767.0 * gyroRange
+        }
+
+        private fun unsignedToSigned16bit(unsigned: Int): Int {
+            return if (unsigned and 0x8000 != 0)
+                -1 * (0x8000 - (unsigned and 0x8000 - 1))
+            else
+                unsigned
+        }
+    }
+}
