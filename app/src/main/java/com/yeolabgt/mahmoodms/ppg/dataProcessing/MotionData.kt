@@ -2,19 +2,24 @@ package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
 import java.util.*
 
-internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFirst: Boolean = true) :
+internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFirst: Boolean = true, saveData: Boolean = true) :
         BaseDataCollector(addressMac, uuid) {
     var totalDataPointsReceived: Int = 0
-    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate = 250)
     var dataBufferAccY: DataBuffer = DataBuffer(bufferSize)
     var dataBufferAccZ: DataBuffer = DataBuffer(bufferSize)
     var dataBufferGyrX: DataBuffer = DataBuffer(bufferSize)
     var dataBufferGyrY: DataBuffer = DataBuffer(bufferSize)
     var dataBufferGyrZ: DataBuffer = DataBuffer(bufferSize)
+    // File data saver
+    var dataSaver: DataSaver? = null
 
     // Parameters
     init {
         Companion.MSBFirst = MSBFirst
+        if (saveData) {
+            dataSaver = DataSaver("/MotionData", "ICMData", addressMac, samplingRate = 250.0)
+        }
     }
 
     fun handleNewData(bytes: ByteArray) {
@@ -54,8 +59,10 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, MSBFi
         MSBFirst = msb
     }
 
-    fun resetBuffers() {
+    fun saveAndResetBuffers() {
         this.resetBuffer()
+        // Save data to file before resetting
+        this.dataSaver?.saveDoubleArrays(dataBufferAccX.timeStampsDoubles!!, dataBufferAccX.dataBufferDoubles!!, dataBufferAccY.dataBufferDoubles!!, dataBufferAccZ.dataBufferDoubles!!, dataBufferGyrX.dataBufferDoubles!!, dataBufferGyrY.dataBufferDoubles!!, dataBufferGyrZ.dataBufferDoubles!!)
         this.dataBufferAccX.resetBuffer()
         this.dataBufferAccY.resetBuffer()
         this.dataBufferAccZ.resetBuffer()

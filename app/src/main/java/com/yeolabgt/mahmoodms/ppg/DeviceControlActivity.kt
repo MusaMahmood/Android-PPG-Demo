@@ -17,6 +17,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.NavUtils
+import android.support.v4.content.FileProvider
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -32,7 +33,6 @@ import com.yeolabgt.mahmoodms.ppg.dataProcessing.DataBuffer
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.MotionData
 
 import java.io.IOException
-import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -76,17 +76,21 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var dataRate: Double = 0.toDouble()
     //Play Sound:
 
-    private val mTimeStamp: String
-        get() = SimpleDateFormat("yyyy.MM.dd_HH.mm.ss", Locale.US).format(Date())
+
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_device_control)
-        //Set orientation of device based on screen type/size:
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        // TODO: Set content view based on number of devices connected?
         //Receive Intents:
         val intent = intent
         deviceMacAddresses = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_KEY)
+        if (deviceMacAddresses?.size == 1) {
+            setContentView(R.layout.activity_device_control)
+            //Set orientation of device based on screen type/size:
+        } else {
+
+        }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val deviceDisplayNames = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_NAMES)
         mDeviceName = deviceDisplayNames[0]
         mDeviceAddress = deviceMacAddresses!![0]
@@ -131,8 +135,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         val files = ArrayList<Uri>()
         val context = applicationContext
         // TODO: add all files from DataChannels.
-//        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mPrimarySaveDataFile!!.file)
-//        files.add(uii)
+        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file)
+        files.add(uii)
 //        if(mSaveFileMPU!=null) {
 //            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mSaveFileMPU!!.file)
 //            files.add(uii2)
@@ -146,9 +150,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     @Throws(IOException::class)
     private fun terminateDataFileWriter() {
-//        mPrimarySaveDataFile?.terminateDataFileWriter()
-//        mSaveFileMPU?.terminateDataFileWriter()
-        //TODO: Terminate all files in DC.
+        //TODO: Terminate all files
+        mICM?.dataSaver?.terminateDataFileWriter()
     }
 
     public override fun onResume() {
@@ -492,11 +495,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             getDataRateBytes(dataBytesMPU.size) //+=240
             mICM?.handleNewData(dataBytesMPU)
             if (mICM?.packetGraphingCounter?.toInt() == 2) { // Plot and reset
-                addToGraphBufferMPU(mGraphAdapterMotionAX!!, mICM?.dataBufferAccX!!)
-                addToGraphBufferMPU(mGraphAdapterMotionAY!!, mICM?.dataBufferAccY!!)
-                addToGraphBufferMPU(mGraphAdapterMotionAZ!!, mICM?.dataBufferAccZ!!)
-                //TODO: Save data!
-                mICM?.resetBuffers()
+                addToGraphBufferMPU(mGraphAdapterMotionAX!!, mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBufferMPU(mGraphAdapterMotionAY!!, mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBufferMPU(mGraphAdapterMotionAZ!!, mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                mICM?.saveAndResetBuffers()
             }
 //            mSaveFileMPU!!.exportDataWithTimestampMPU(mMPU!!.characteristicDataPacketBytes)
 //            if (mSaveFileMPU!!.mLinesWrittenCurrentFile > 1048576) {
@@ -506,9 +508,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
     }
 
-    private fun addToGraphBufferMPU(graphAdapter: GraphAdapter, dataBuffer: DataBuffer) {
+    private fun addToGraphBufferMPU(graphAdapter: GraphAdapter, dataBuffer: DataBuffer, dataXValues: DoubleArray) {
         for (i in 0 until dataBuffer.dataBufferDoubles!!.size) {
-            graphAdapter.addDataPointTimeDomain(dataBuffer.dataBufferDoubles!![i], dataBuffer.getCurrentIndexAndIncrement())
+            graphAdapter.addDataPointTimeDomain(dataXValues[i], dataBuffer.dataBufferDoubles!![i])
         }
     }
 

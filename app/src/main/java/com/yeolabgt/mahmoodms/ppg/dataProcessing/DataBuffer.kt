@@ -2,15 +2,22 @@ package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
 import com.google.common.primitives.Doubles
 
-open class DataBuffer(slideBufferSize: Int) {
+open class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, var samplingRate: Int = 0) {
+    // Buffer for graphing
     var dataBufferDoubles: DoubleArray? = null
-    var slideBufferEnabled: Boolean = false
+//    private var currentGraphIndex: Int = 0
+    // For Timestamps:
+    private val increment = 1/samplingRate.toDouble()
+    var timeStampsDoubles: DoubleArray? = null
+    private var totalDatapointIndex: Long = 0
+    // Slide buffer Only
+    private var slideBufferEnabled: Boolean = false
     var bufferSize: Int = 0
     var classificationBuffer: DoubleArray? = null
-    var currentGraphIndex: Int = 0
 
     init {
-        this.currentGraphIndex = 0
+//        this.currentGraphIndex = 0
+
         if (slideBufferSize != 0) {
             enableSlideBuffer(slideBufferSize)
         } else {
@@ -18,9 +25,9 @@ open class DataBuffer(slideBufferSize: Int) {
         }
     }
 
-    fun getCurrentIndexAndIncrement(): Int {
-        return this.currentGraphIndex++
-    }
+//    fun getCurrentIndexAndIncrement(): Int {
+//        return this.currentGraphIndex++
+//    }
 
     private fun enableSlideBuffer(bufferSize: Int) {
         this.slideBufferEnabled = true
@@ -35,6 +42,18 @@ open class DataBuffer(slideBufferSize: Int) {
     fun addToBuffer(doubleArray: DoubleArray) {
         if (slideBufferEnabled) {
             addToDoublesBuffer(doubleArray)
+        }
+        if (saveTimeStamps) {
+            val timeStampsDoubleTemp = DoubleArray(doubleArray.size)
+            for (i in 0 until doubleArray.size) {
+                timeStampsDoubleTemp[i] = (totalDatapointIndex + i.toLong()).toDouble() * increment
+            }
+            totalDatapointIndex += doubleArray.size
+            if (this.timeStampsDoubles != null) {
+                this.timeStampsDoubles = Doubles.concat(this.timeStampsDoubles, timeStampsDoubleTemp)
+            } else {
+                this.timeStampsDoubles = timeStampsDoubleTemp
+            }
         }
         if (this.dataBufferDoubles != null) {
             this.dataBufferDoubles = Doubles.concat(this.dataBufferDoubles, doubleArray)
@@ -54,6 +73,7 @@ open class DataBuffer(slideBufferSize: Int) {
     }
 
     fun resetBuffer() {
+        this.timeStampsDoubles = null
         this.dataBufferDoubles = null
     }
 
