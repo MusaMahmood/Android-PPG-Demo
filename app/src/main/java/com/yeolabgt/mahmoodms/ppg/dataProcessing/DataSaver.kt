@@ -6,10 +6,11 @@ import com.opencsv.CSVWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.*
 
-internal class DataSaver(directoryName: String, dataType: String, addressMac: String, samplingRate: Int, splitFilesAfter: Int = 0) {
+internal class DataSaver(directoryName: String, dataType: String, addressMac: String, fileTimestamp: String, samplingRate: Int, splitFilesAfter: Int = 0) {
     var fileName: String
     var file: File? = null
     private var csvWriter: CSVWriter? = null
@@ -20,14 +21,11 @@ internal class DataSaver(directoryName: String, dataType: String, addressMac: St
     var totalLinesWritten: Long = 0
     var totalLinesWrittenCurrentFile: Long = 0
 
-    private val mTimeStamp: String
-        get() = SimpleDateFormat("yyyy.MM.dd_HH.mm.ss", Locale.US).format(Date())
-
     init {
         fileName = if (splitFiles) {
-            "${dataType}_${addressMac.replace(":", "")}_${mTimeStamp}_${samplingRate}_" + "$fileNumber".padStart(3)
+            "${dataType}_${addressMac.replace(":", "")}_${fileTimestamp}_${samplingRate}_" + "$fileNumber".padStart(3)
         } else {
-            "${dataType}_${addressMac.replace(":", "")}_${mTimeStamp}_${samplingRate}"
+            "${dataType}_${addressMac.replace(":", "")}_${fileTimestamp}_$samplingRate"
         }
         createNewFile(directoryName, fileName)
     }

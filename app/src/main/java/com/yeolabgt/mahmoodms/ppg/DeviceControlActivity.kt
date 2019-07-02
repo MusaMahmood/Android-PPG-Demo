@@ -17,7 +17,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.NavUtils
-import android.support.v4.content.FileProvider
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -29,13 +28,14 @@ import android.widget.ToggleButton
 
 import com.androidplot.util.Redrawer
 import com.yeolabgt.mahmoodms.actblelibrary.ActBle
-import com.yeolabgt.mahmoodms.ppg.dataProcessing.DataBuffer
-import com.yeolabgt.mahmoodms.ppg.dataProcessing.GraphAdapter
+import com.yeolabgt.mahmoodms.ppg.dataProcessing.*
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.MotionData
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.PPGData
 
 import java.io.IOException
+import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Created by mahmoodms on 5/31/2016.
@@ -45,8 +45,16 @@ import java.util.*
 class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     // Graphing Variables:
     private var mXYPlotInitializedBoolean = false
-    private var mTimeDomainPlotAdapterCh1: XYPlotAdapter? = null
-    private var mMotionDataPlotAdapter: XYPlotAdapter? = null
+    private lateinit var mXYPlotArray: Array<XYPlotAdapter?>
+    private lateinit var mMotionPlotArray: Array<XYPlotAdapter?>
+    private var mPlotCh1: XYPlotAdapter? = null
+    private var mPlotCh2: XYPlotAdapter? = null
+    private var mPlotCh3: XYPlotAdapter? = null
+    private var mPlotCh4: XYPlotAdapter? = null
+    private var mMotionPlotCh1: XYPlotAdapter? = null
+    private var mMotionPlotCh2: XYPlotAdapter? = null
+    private var mMotionPlotCh3: XYPlotAdapter? = null
+    private var mMotionPlotCh4: XYPlotAdapter? = null
     //Device Information
     private var mBleInitializedBoolean = false
     private lateinit var mBluetoothGattArray: Array<BluetoothGatt?>
@@ -69,7 +77,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     //Data Variables:
     private val batteryWarning = 20
     private var dataRate: Double = 0.toDouble()
-    // TODO: ArrayList<BaseDataCollector>
+    // ArrayList<DataType>
+    private var mPPGArrayList = ArrayList<PPGData>()
+    private var mICMArrayList = ArrayList<MotionData>()
+
+    private val mTimeStamp: String
+        get() = SimpleDateFormat("yyyy.MM.dd_HH.mm.ss", Locale.US).format(Date())
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,9 +125,18 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         //UI Listeners
         mChannelSelect = findViewById(R.id.toggleButtonGraph)
         mChannelSelect!!.setOnCheckedChangeListener { _, b ->
-//            mGraphAdapterCh1!!.clearPlot()
-//            mGraphAdapterCh1!!.plotData = b
-            //TODO:
+            for (ppgData in mPPGArrayList) {
+                ppgData.dataBuffer.clearPlot()
+                ppgData.dataBuffer.plotData = b
+            }
+            for (motionData in mICMArrayList) {
+                motionData.dataBufferAccX.clearPlot()
+                motionData.dataBufferAccX.plotData = b
+                motionData.dataBufferAccY.clearPlot()
+                motionData.dataBufferAccY.plotData = b
+                motionData.dataBufferAccZ.clearPlot()
+                motionData.dataBufferAccZ.plotData = b
+            }
         }
         mExportButton.setOnClickListener { exportData() }
     }
@@ -129,12 +151,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         val files = ArrayList<Uri>()
         val context = applicationContext
         // TODO: add all files from DataChannels.
-        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file!!)
-        files.add(uii)
-        if(mPPG!=null) {
-            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mPPG?.dataSaver?.file!!)
-            files.add(uii2)
-        }
+//        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file!!)
+//        files.add(uii)
+//        if(mPPG!=null) {
+//            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mPPG?.dataSaver?.file!!)
+//            files.add(uii2)
+//        }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
         exportData.putExtra(Intent.EXTRA_SUBJECT, "PPG/ICM Sensor Data Export Details")
         exportData.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
@@ -144,9 +166,13 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     @Throws(IOException::class)
     private fun terminateDataFileWriter() {
-        //TODO: Terminate all files
-        mICM?.dataSaver?.terminateDataFileWriter()
-        mPPG?.dataSaver?.terminateDataFileWriter()
+        //Terminate all files
+        for (ppgData in mPPGArrayList) {
+            ppgData.dataSaver?.terminateDataFileWriter()
+        }
+        for (motionData in mICMArrayList) {
+            motionData.dataSaver?.terminateDataFileWriter()
+        }
     }
 
     public override fun onResume() {
@@ -179,17 +205,32 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         for (i in mBluetoothDeviceArray.indices) {
             Log.e(TAG, "Connecting to Device: " + (mBluetoothDeviceArray[i]!!.name + " " + mBluetoothDeviceArray[i]!!.address))
 //            val str = mBluetoothDeviceArray[i]!!.name.toLowerCase()
-            if (!mXYPlotInitializedBoolean) setupXYPlot()
         }
+        if (!mXYPlotInitializedBoolean) setupXYPlot()
         mBleInitializedBoolean = true
     }
 
     private fun setupXYPlot() {
         // Initialize our XYPlot reference:
-        mTimeDomainPlotAdapterCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 120, sampleRate = 4)
-        mMotionDataPlotAdapter = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
-        val xyPlotList = listOf(mTimeDomainPlotAdapterCh1?.xyPlot, mMotionDataPlotAdapter?.xyPlot)
-        mRedrawer = Redrawer(xyPlotList, 24f, false)
+        mPlotCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 120, sampleRate = 4)
+        mMotionPlotCh1 = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
+        if (deviceMacAddresses!!.size >= 2) {
+            mPlotCh2 = XYPlotAdapter(findViewById(R.id.ppgPlot2), false, 120, sampleRate = 4)
+            mMotionPlotCh2 = XYPlotAdapter(findViewById(R.id.motionPlot2), "Time (s)", "Acc (g)", 375.0)
+        }
+        if (deviceMacAddresses!!.size >= 3) {
+            mPlotCh3 = XYPlotAdapter(findViewById(R.id.ppgPlot3), false, 120, sampleRate = 4)
+            mMotionPlotCh3 = XYPlotAdapter(findViewById(R.id.motionPlot3), "Time (s)", "Acc (g)", 375.0)
+        }
+        if (deviceMacAddresses!!.size >= 4) {
+            mPlotCh4 = XYPlotAdapter(findViewById(R.id.ppgPlot4), false, 120, sampleRate = 4)
+            mMotionPlotCh4 = XYPlotAdapter(findViewById(R.id.motionPlot4), "Time (s)", "Acc (g)", 375.0)
+        }
+        mXYPlotArray = arrayOf(mPlotCh1, mPlotCh2, mPlotCh3, mPlotCh4)
+        mMotionPlotArray = arrayOf(mMotionPlotCh1, mMotionPlotCh2, mMotionPlotCh3, mMotionPlotCh4)
+        val xyPlotList = listOf(mPlotCh1?.xyPlot, mPlotCh2?.xyPlot, mPlotCh3?.xyPlot, mPlotCh4?.xyPlot,
+                mMotionPlotCh1?.xyPlot, mMotionPlotCh2?.xyPlot, mMotionPlotCh3?.xyPlot, mMotionPlotCh4?.xyPlot)
+        mRedrawer = Redrawer(xyPlotList.filterNotNull(), 24f, false)
         mRedrawer!!.start()
         mXYPlotInitializedBoolean = true
     }
@@ -296,9 +337,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             //UI Stuff:
             val chSel = PreferencesFragment.channelSelect(context)
             //File Save Stuff
-            mTimeDomainPlotAdapterCh1!!.xyPlot?.redraw()
-            mChannelSelect!!.isChecked = chSel
-//            mGraphAdapterCh1!!.plotData = chSel
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -350,8 +388,13 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 if (AppConstant.SERVICE_STRAIN_GAUGE == service.uuid) {
                     if (service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE), true)
-                        mPPG = PPGData(0, gatt.device.address, service.uuid)
-                        addGraphToPlot(mPPG?.dataBuffer!!, mTimeDomainPlotAdapterCh1!!)
+                        mPPGArrayList.add(PPGData(0, gatt.device.address, AppConstant.CHAR_STRAIN_GAUGE, mTimeStamp))
+                        for (i in 0 until deviceMacAddresses!!.size) {
+                            if (gatt.device.address == deviceMacAddresses!![i]) {
+                                addGraphToPlot(mPPGArrayList[mPPGArrayList.lastIndex].dataBuffer, mXYPlotArray[i]!!)
+                                break
+                            }
+                        }
                     }
                 }
 
@@ -362,16 +405,17 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
                 if (AppConstant.SERVICE_MPU == service.uuid) {
                     mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_MPU_COMBINED), true)
-                    //TODO: Create arrayList of devices/types
-//                    for (i in 0..mBluetoothGattArray.size) {
-//                        if(gatt.device.address == mBluetoothGattArray[i]!!.device.address) {
-//                        }
-//                    }
-                    mICM = MotionData(0, gatt.device.address, service.uuid)
-                    // TODO: Add ICM→GraphAdapters to corresponding plots. Then start redrawer.
-                    addGraphToPlot(mICM?.dataBufferAccX!!, mMotionDataPlotAdapter!!)
-                    addGraphToPlot(mICM?.dataBufferAccY!!, mMotionDataPlotAdapter!!)
-                    addGraphToPlot(mICM?.dataBufferAccZ!!, mMotionDataPlotAdapter!!)
+                    //Add to arrayList of devices/types
+                    mICMArrayList.add(MotionData(0, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp))
+                    for (i in 0 until deviceMacAddresses!!.size) {
+                        // Add ICM→GraphAdapters to corresponding plots.
+                        if (gatt.device.address == deviceMacAddresses!![i]) {
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccX, mMotionPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccY, mMotionPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccZ, mMotionPlotArray[i]!!)
+                            break
+                        }
+                    }
                 }
             }
             //Run process only once:
@@ -395,7 +439,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     }
 
     override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-        //TODO: Check all DataChannel→BaseDataCollector→gatt.device + characteristic UUID to see if it has an appropriate adapter.
         if (AppConstant.CHAR_BATTERY_LEVEL == characteristic.uuid) {
             val batteryLevel = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0)!!
             updateBatteryStatus(batteryLevel)
@@ -404,23 +447,39 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
-            mPPG?.handleNewData(data)
-            if (mPPG?.packetGraphingCounter?.toInt() == 4) {
-                addToGraphBuffer(mPPG?.dataBuffer!!, mPPG!!.dataBuffer.timeStampsDoubles!!)
-                mPPG?.saveAndResetBuffers()
+            for (i in 0 until deviceMacAddresses!!.size) {
+                if (deviceMacAddresses!![i] == gatt.device.address) {
+                    mPPGArrayList[i].handleNewData(data)
+                    if (mPPGArrayList[i].packetGraphingCounter.toInt() == 4) {
+                        addToGraphBuffer(mPPGArrayList[i].dataBuffer, mPPGArrayList[i].dataBuffer.timeStampsDoubles!!)
+                        mPPGArrayList[i].saveAndResetBuffers()
+                        return // we can return here because there's nothing left to do with this char
+                    }
+                }
             }
         }
 
         if (AppConstant.CHAR_MPU_COMBINED == characteristic.uuid) {
-            val dataBytesMPU = characteristic.value
-            getDataRateBytes(dataBytesMPU.size) //+=240
-            mICM?.handleNewData(dataBytesMPU)
-            if (mICM?.packetGraphingCounter?.toInt() == 8) { // Plot and reset
-                addToGraphBuffer(mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                addToGraphBuffer(mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                addToGraphBuffer(mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                mICM?.saveAndResetBuffers()
+            val dataPacket = characteristic.value
+            getDataRateBytes(dataPacket.size) //+=240
+            for (i in 0 until deviceMacAddresses!!.size) {
+                if (deviceMacAddresses!![i] == gatt.device.address) {
+                    mICMArrayList[i].handleNewData(dataPacket)
+                    if (mICMArrayList[i].packetGraphingCounter.toInt() == 8) {
+                        addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                        addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                        addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                        mICMArrayList[i].saveAndResetBuffers()
+                    }
+                }
             }
+//            mICM?.handleNewData(dataBytesMPU)
+//            if (mICM?.packetGraphingCounter?.toInt() == 8) { // Plot and reset
+//                addToGraphBuffer(mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+//                addToGraphBuffer(mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+//                addToGraphBuffer(mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+//                mICM?.saveAndResetBuffers()
+//            }
         }
     }
 
@@ -600,8 +659,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         private val TAG = DeviceControlActivity::class.java.simpleName
         var mRedrawer: Redrawer? = null
         //Data Channel Classes
-        internal var mICM: MotionData? = null
-        internal var mPPG: PPGData? = null
+//        internal var mICM: MotionData? = null
+//        internal var mPPG: PPGData? = null
 
         init {
             System.loadLibrary("ecg-lib")

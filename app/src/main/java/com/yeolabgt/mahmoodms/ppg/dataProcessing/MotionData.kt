@@ -3,7 +3,7 @@ package com.yeolabgt.mahmoodms.ppg.dataProcessing
 import android.graphics.Color
 import java.util.*
 
-internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, samplingRate: Int = 250, MSBFirst: Boolean = true, saveData: Boolean = true) :
+internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Int = 250, MSBFirst: Boolean = true, saveData: Boolean = true) :
         BaseDataCollector(addressMac, uuid) {
     var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 375, "AccX", Color.RED)
     var dataBufferAccY: DataBuffer = DataBuffer(bufferSize, false, samplingRate, 375, "AccY", Color.GREEN)
@@ -18,7 +18,7 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, sampl
     init {
         Companion.MSBFirst = MSBFirst
         if (saveData) {
-            dataSaver = DataSaver("/MotionData", "ICMData", addressMac, samplingRate = samplingRate)
+            dataSaver = DataSaver("/MotionData", "ICMData", addressMac, fileTimestamp, samplingRate)
         }
     }
 

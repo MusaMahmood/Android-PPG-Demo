@@ -5,6 +5,48 @@
     android:layout_height="match_parent">
 
 
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/button_export"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"
+            android:text="Export"
+            android:textColor="#000000" />
+
+        <ToggleButton
+            android:id="@+id/toggleButtonGraph"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.1"
+            android:checked="true"
+            android:text="ToggleButton" />
+
+        <TextView
+            android:id="@+id/dataRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="TextView" />
+
+        <TextView
+            android:id="@+id/batteryText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.42"
+            android:text="Battery"
+            android:textAlignment="textEnd"
+            android:textSize="15sp" />
+
+    </LinearLayout>
+
     <com.androidplot.xy.XYPlot
         android:id="@+id/ppgPlot3"
         style="@style/APFullScreenGraph.Light.Minimalist"
@@ -13,8 +55,7 @@
         app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
         app:renderMode="use_background_thread" />
 
     <com.androidplot.xy.XYPlot
@@ -25,8 +66,7 @@
         app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/ppgPlot3"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
         app:renderMode="use_background_thread" />
 
     <com.androidplot.xy.XYPlot
@@ -37,7 +77,7 @@
         app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
         app:renderMode="use_background_thread" />
 
     <com.androidplot.xy.XYPlot
@@ -92,8 +132,7 @@
         app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.5"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
         app:renderMode="use_background_thread" />
 
     <android.support.constraint.Guideline
