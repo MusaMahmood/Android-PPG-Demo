@@ -227,18 +227,18 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     private fun setupXYPlot() {
         // Initialize our XYPlot reference:
-        mPlotCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 120, sampleRate = 4)
+        mPlotCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 500, sampleRate = 4)
         mMotionPlotCh1 = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
         if (deviceMacAddresses!!.size >= 2) {
-            mPlotCh2 = XYPlotAdapter(findViewById(R.id.ppgPlot2), false, 120, sampleRate = 4)
+            mPlotCh2 = XYPlotAdapter(findViewById(R.id.ppgPlot2), false, 500, sampleRate = 4)
             mMotionPlotCh2 = XYPlotAdapter(findViewById(R.id.motionPlot2), "Time (s)", "Acc (g)", 375.0)
         }
         if (deviceMacAddresses!!.size >= 3) {
-            mPlotCh3 = XYPlotAdapter(findViewById(R.id.ppgPlot3), false, 120, sampleRate = 4)
+            mPlotCh3 = XYPlotAdapter(findViewById(R.id.ppgPlot3), false, 500, sampleRate = 4)
             mMotionPlotCh3 = XYPlotAdapter(findViewById(R.id.motionPlot3), "Time (s)", "Acc (g)", 375.0)
         }
         if (deviceMacAddresses!!.size >= 4) {
-            mPlotCh4 = XYPlotAdapter(findViewById(R.id.ppgPlot4), false, 120, sampleRate = 4)
+            mPlotCh4 = XYPlotAdapter(findViewById(R.id.ppgPlot4), false, 500, sampleRate = 4)
             mMotionPlotCh4 = XYPlotAdapter(findViewById(R.id.motionPlot4), "Time (s)", "Acc (g)", 375.0)
         }
         mXYPlotArray = arrayOf(mPlotCh1, mPlotCh2, mPlotCh3, mPlotCh4)
