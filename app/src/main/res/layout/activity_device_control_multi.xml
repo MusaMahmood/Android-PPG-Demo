@@ -1,83 +1,127 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:ap="http://schemas.android.com/apk/res-auto"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:background="#FFFFFF">
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/activity_main_inference"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/ppgPlot3"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/ppgPlot4"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/ppgPlot3"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/ppgPlot1"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/motionPlot1"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/motionPlot2"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/motionPlot3"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/motionPlot4"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
+        app:renderMode="use_background_thread" />
+
+    <com.androidplot.xy.XYPlot
+        android:id="@+id/ppgPlot2"
+        style="@style/APFullScreenGraph.Light.Minimalist"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.5"
+        app:renderMode="use_background_thread" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineVert1"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.25" />
 
-        <Button
-            android:id="@+id/button_export"
-            style="?android:attr/buttonStyleSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:text="Export"
-            android:textColor="#000000" />
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineVert2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
 
-        <ToggleButton
-            android:id="@+id/toggleButtonGraph"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.1"
-            android:checked="true"
-            android:text="ToggleButton" />
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineVert3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.75" />
 
-        <TextView
-            android:id="@+id/dataRate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="TextView" />
+    <android.support.constraint.Guideline
+        android:id="@+id/guidelineHorz"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5" />
 
-        <TextView
-            android:id="@+id/batteryText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.42"
-            android:text="Battery"
-            android:textAlignment="textEnd"
-            android:textSize="15sp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="0.4"
-            android:orientation="vertical">
-
-                <com.androidplot.xy.XYPlot
-                    android:id="@+id/ecgTimeDomainXYPlot"
-                    style="@style/APFullScreenGraph.Light.Minimalist"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:layout_weight="0.4"
-                    ap:renderMode="use_background_thread" />
-
-
-        </LinearLayout>
-
-        <com.androidplot.xy.XYPlot
-            android:id="@+id/motionDataPlot"
-            style="@style/APFullScreenGraph.Light.Minimalist"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            ap:renderMode="use_background_thread" />
-
-    </LinearLayout>
-
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>
