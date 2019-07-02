@@ -41,7 +41,7 @@ internal class XYPlotAdapter {
         this.xyPlot!!.setRangeStep(StepMode.SUBDIVIDE, 5.0)
     }
 
-    constructor(findViewByID: View, plotImplicitXVals: Boolean, historySize: Int, sampleRate: Int=250, domainLabel: String="Time (seconds)", rangeLabel: String="Voltage (V)") {
+    constructor(findViewByID: View, plotImplicitXVals: Boolean, historySize: Int, sampleRate: Int=250, domainLabel: String="Time (s)", rangeLabel: String="Voltage (V)") {
         this.xyPlot = findViewByID as XYPlot
         val historySeconds = historySize / sampleRate
         if (plotImplicitXVals) {

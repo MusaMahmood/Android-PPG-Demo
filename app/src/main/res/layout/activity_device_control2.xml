@@ -1,5 +1,6 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main_inference"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -34,15 +35,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="TextView" />
-
-        <TextView
-            android:id="@+id/batteryText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.42"
-            android:text="Battery"
-            android:textAlignment="textEnd"
-            android:textSize="15sp" />
 
     </LinearLayout>
 
@@ -103,5 +95,23 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.5" />
+
+    <TextView
+        android:id="@+id/battery1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ppgPlot1" />
+
+    <TextView
+        android:id="@+id/battery2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        app:layout_constraintEnd_toEndOf="@+id/ppgPlot2"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintTop_toTopOf="@+id/ppgPlot1" />
 
 </android.support.constraint.ConstraintLayout>

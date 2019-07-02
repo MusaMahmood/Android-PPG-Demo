@@ -31,10 +31,10 @@ internal class PPGData(bufferSize: Int, addressMac: String, uuid: UUID, fileTime
     }
 
     companion object {
-        fun bytesToDouble14bit(a1: Byte, a2: Byte, msbFirst: Boolean = false): Double {
+        fun bytesToDouble14bit(a1: Byte, a2: Byte, gain: Double=(1.0/6.0), ref: Double = 0.6, msbFirst: Boolean = false): Double {
             val unsigned = unsignedBytesToInt(a1, a2, msbFirst)
             val signed = unsignedToSigned16bit(unsigned).toDouble()
-            return signed / 16384.0 * 3.30
+            return signed / 16384.0 / gain * ref
         }
     }
 }

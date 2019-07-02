@@ -17,6 +17,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.support.v4.app.NavUtils
+import android.support.v4.content.FileProvider
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -65,7 +66,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     //Connecting to Multiple Devices
     private var deviceMacAddresses: Array<String>? = null
     //UI Elements - TextViews, Buttons, etc
-    private var mBatteryLevel: TextView? = null
+    private lateinit var mBatteryLevelTextViews: Array<TextView?>
     private var mDataRate: TextView? = null
     private var mChannelSelect: ToggleButton? = null
     private var menu: Menu? = null
@@ -91,9 +92,22 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         deviceMacAddresses = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_KEY)
         // Set content view based on number of devices connected:
         when {
-            deviceMacAddresses?.size == 1 -> setContentView(R.layout.activity_device_control)
-            deviceMacAddresses?.size == 2 -> setContentView(R.layout.activity_device_control2)
-            else -> setContentView(R.layout.activity_device_control_multi)
+            deviceMacAddresses?.size == 1 -> {
+                setContentView(R.layout.activity_device_control)
+                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1))
+            }
+            deviceMacAddresses?.size == 2 -> {
+                setContentView(R.layout.activity_device_control2)
+                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2))
+            }
+            deviceMacAddresses?.size == 3 -> {
+                setContentView(R.layout.activity_device_control_multi)
+                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3))
+            }
+            else -> {
+                setContentView(R.layout.activity_device_control_multi)
+                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4))
+            }
         }
         //Set orientation of device based on screen type/size:
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -113,7 +127,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         //Set up TextViews
         val mExportButton = findViewById<Button>(R.id.button_export)
-        mBatteryLevel = findViewById(R.id.batteryText)
         mDataRate = findViewById(R.id.dataRate)
         mDataRate!!.text = "..."
         val ab = getActionBar()
@@ -151,12 +164,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         val files = ArrayList<Uri>()
         val context = applicationContext
         // TODO: add all files from DataChannels.
-//        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file!!)
-//        files.add(uii)
-//        if(mPPG!=null) {
-//            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mPPG?.dataSaver?.file!!)
-//            files.add(uii2)
-//        }
+        for (ppg in mPPGArrayList) {
+            val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", ppg.dataSaver?.file!!)
+            files.add(uii)
+        }
+        for (icm in mICMArrayList) {
+            val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", icm.dataSaver?.file!!)
+            files.add(uii)
+        }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
         exportData.putExtra(Intent.EXTRA_SUBJECT, "PPG/ICM Sensor Data Export Details")
         exportData.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
@@ -333,9 +348,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == 1) {
-            val context = applicationContext
+//            val context = applicationContext
             //UI Stuff:
-            val chSel = PreferencesFragment.channelSelect(context)
+//            val chSel = PreferencesFragment.channelSelect(context)
             //File Save Stuff
         }
         super.onActivityResult(requestCode, resultCode, data)
@@ -428,8 +443,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (status == BluetoothGatt.GATT_SUCCESS) {
             if (AppConstant.CHAR_BATTERY_LEVEL == characteristic.uuid) {
                 if (characteristic.value != null) {
-                    val batteryLevel = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0)
-                    updateBatteryStatus(batteryLevel)
+                    val batteryLevel = PPGData.bytesToDouble14bit(characteristic.value[0], characteristic.value[1])
+                    updateBatteryStatus(batteryLevel, gatt.device.address)
                     Log.i(TAG, "Battery Level :: $batteryLevel")
                 }
             }
@@ -440,8 +455,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
         if (AppConstant.CHAR_BATTERY_LEVEL == characteristic.uuid) {
-            val batteryLevel = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0)!!
-            updateBatteryStatus(batteryLevel)
+            val batteryLevel = PPGData.bytesToDouble14bit(characteristic.value[0], characteristic.value[1])
+            updateBatteryStatus(batteryLevel, gatt.device.address)
         }
 
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
@@ -450,7 +465,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             for (i in 0 until deviceMacAddresses!!.size) {
                 if (deviceMacAddresses!![i] == gatt.device.address) {
                     mPPGArrayList[i].handleNewData(data)
-                    if (mPPGArrayList[i].packetGraphingCounter.toInt() == 4) {
+                    if (mPPGArrayList[i].packetGraphingCounter.toInt() == 1) {
                         addToGraphBuffer(mPPGArrayList[i].dataBuffer, mPPGArrayList[i].dataBuffer.timeStampsDoubles!!)
                         mPPGArrayList[i].saveAndResetBuffers()
                         return // we can return here because there's nothing left to do with this char
@@ -465,7 +480,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             for (i in 0 until deviceMacAddresses!!.size) {
                 if (deviceMacAddresses!![i] == gatt.device.address) {
                     mICMArrayList[i].handleNewData(dataPacket)
-                    if (mICMArrayList[i].packetGraphingCounter.toInt() == 8) {
+                    if (mICMArrayList[i].packetGraphingCounter.toInt() == 4) {
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
@@ -473,13 +488,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     }
                 }
             }
-//            mICM?.handleNewData(dataBytesMPU)
-//            if (mICM?.packetGraphingCounter?.toInt() == 8) { // Plot and reset
-//                addToGraphBuffer(mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-//                addToGraphBuffer(mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-//                addToGraphBuffer(mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-//                mICM?.saveAndResetBuffers()
-//            }
         }
     }
 
@@ -608,29 +616,31 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
     }
 
-    private fun updateBatteryStatus(integerValue: Int) {
+    private fun updateBatteryStatus(voltage: Double, address: String) {
         val status: String
-        val convertedBatteryVoltage = integerValue.toDouble() / 4096.0 * 7.20
-        //Because TPS63001 dies below 1.8V, we need to set up a linear fit between 1.8-4.2V
-        //Anything over 4.2V = 100%
+        val finalVoltage = voltage * 2.0 // Double voltage due to voltage divider in circuit
         val finalPercent: Double = when {
-            125.0 / 3.0 * convertedBatteryVoltage - 75.0 > 100.0 -> 100.0
-            125.0 / 3.0 * convertedBatteryVoltage - 75.0 < 0.0 -> 0.0
-            else -> 125.0 / 3.0 * convertedBatteryVoltage - 75.0
+            125.0 / 3.0 * finalVoltage - 75.0 > 100.0 -> 100.0
+            125.0 / 3.0 * finalVoltage - 75.0 < 0.0 -> 0.0
+            else -> 125.0 / 3.0 * finalVoltage - 75.0
         }
-        Log.e(TAG, "Battery Integer Value: $integerValue")
-        Log.e(TAG, "ConvertedBatteryVoltage: " + String.format(Locale.US, "%.5f", convertedBatteryVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
-        status = String.format(Locale.US, "%.1f", finalPercent) + "%"
-        runOnUiThread {
-            if (finalPercent <= batteryWarning) {
-                mBatteryLevel!!.setTextColor(Color.RED)
-                mBatteryLevel!!.setTypeface(null, Typeface.BOLD)
-                Toast.makeText(applicationContext, "Charge Battery, Battery Low $status", Toast.LENGTH_SHORT).show()
-            } else {
-                mBatteryLevel!!.setTextColor(Color.GREEN)
-                mBatteryLevel!!.setTypeface(null, Typeface.BOLD)
+        Log.e(TAG, "Device $address, BattVoltage: " + String.format(Locale.US, "%.3f", finalVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
+        status = address + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"
+        for (i in 0 until deviceMacAddresses?.size!!) {
+            if (address == deviceMacAddresses!![i]) {
+                runOnUiThread {
+                    if (finalPercent <= batteryWarning) {
+                        mBatteryLevelTextViews[i]!!.setTextColor(Color.RED)
+                        mBatteryLevelTextViews[i]!!.setTypeface(null, Typeface.BOLD)
+                        Toast.makeText(applicationContext, "Charge Battery, Battery Low $status", Toast.LENGTH_SHORT).show()
+                    } else {
+                        mBatteryLevelTextViews[i]!!.setTextColor(Color.GREEN)
+                        mBatteryLevelTextViews[i]!!.setTypeface(null, Typeface.BOLD)
+                    }
+                    mBatteryLevelTextViews[i]!!.text = status
+                }
+                break
             }
-            mBatteryLevel!!.text = status
         }
     }
 
