@@ -59,7 +59,7 @@ open class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean 
         if (this.bufferSize > 0) {
             val newDataPoints = dataBufferDouble.size
             // Shift Data Backwards by N Amount
-            System.arraycopy(this.classificationBuffer, newDataPoints, this.classificationBuffer, 0, this.bufferSize - newDataPoints)
+            System.arraycopy(this.classificationBuffer!!, newDataPoints, this.classificationBuffer, 0, this.bufferSize - newDataPoints)
             // Copy new data to front of data
             dataBufferDouble.copyInto(this.classificationBuffer!!, this.bufferSize - newDataPoints, 0, newDataPoints)
         }

@@ -80,12 +80,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         //Receive Intents:
         val intent = intent
         deviceMacAddresses = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_KEY)
-        if (deviceMacAddresses?.size == 1) {
-            setContentView(R.layout.activity_device_control)
-            //Set orientation of device based on screen type/size:
-        } else {
-
+        when {
+            deviceMacAddresses?.size == 1 -> setContentView(R.layout.activity_device_control)
+            deviceMacAddresses?.size == 2 -> setContentView(R.layout.activity_device_control2)
+            else -> setContentView(R.layout.activity_device_control_multi)
         }
+        //Set orientation of device based on screen type/size:
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val deviceDisplayNames = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_NAMES)
         mDeviceName = deviceDisplayNames[0]
@@ -131,10 +131,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         val files = ArrayList<Uri>()
         val context = applicationContext
         // TODO: add all files from DataChannels.
-        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file)
+        val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", mICM?.dataSaver?.file!!)
         files.add(uii)
         if(mPPG!=null) {
-            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mPPG?.dataSaver?.file)
+            val uii2 = FileProvider.getUriForFile(context, context.packageName + ".provider", mPPG?.dataSaver?.file!!)
             files.add(uii2)
         }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
@@ -219,9 +219,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         mGraphAdapterCh1 = GraphAdapter(120, "GSR/SG", false, Color.BLUE) //Color.parseColor("#19B52C") also, RED, BLUE, etc.
         //PLOT CH1 By default
         mGraphAdapterCh1!!.setPointWidth(5.toFloat())
-        mTimeDomainPlotAdapterCh1 = XYPlotAdapter(findViewById(R.id.ecgTimeDomainXYPlot), false, 120, sampleRate = 4)
+        mTimeDomainPlotAdapterCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 120, sampleRate = 4)
         mTimeDomainPlotAdapterCh1?.xyPlot?.addSeries(mGraphAdapterCh1!!.series, mGraphAdapterCh1!!.lineAndPointFormatter)
-        mMotionDataPlotAdapter = XYPlotAdapter(findViewById(R.id.motionDataPlot), "Time (s)", "Acc (g)", 375.0)
+        mMotionDataPlotAdapter = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
         mGraphAdapterMotionAX = GraphAdapter(375, "Acc X", false, Color.RED)
         mGraphAdapterMotionAY = GraphAdapter(375, "Acc Y", false, Color.GREEN)
         mGraphAdapterMotionAZ = GraphAdapter(375, "Acc Z", false, Color.BLUE)
