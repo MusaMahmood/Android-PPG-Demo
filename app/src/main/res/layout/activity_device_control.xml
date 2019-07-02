@@ -37,7 +37,7 @@
             android:text="TextView" />
 
         <TextView
-            android:id="@+id/batteryText"
+            android:id="@+id/battery1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="0.42"
@@ -60,7 +60,7 @@
             android:orientation="vertical">
 
                 <com.androidplot.xy.XYPlot
-                    android:id="@+id/ecgTimeDomainXYPlot"
+                    android:id="@+id/ppgPlot1"
                     style="@style/APFullScreenGraph.Light.Minimalist"
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
@@ -71,7 +71,7 @@
         </LinearLayout>
 
         <com.androidplot.xy.XYPlot
-            android:id="@+id/motionDataPlot"
+            android:id="@+id/motionPlot1"
             style="@style/APFullScreenGraph.Light.Minimalist"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
