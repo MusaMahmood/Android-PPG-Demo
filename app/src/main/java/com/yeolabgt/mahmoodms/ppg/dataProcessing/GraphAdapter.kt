@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.ppg
+package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
 import android.util.Log
 import com.androidplot.xy.LineAndPointFormatter
@@ -9,13 +9,11 @@ import com.androidplot.xy.SimpleXYSeries
  * This file controls the AndroidPlot graph.
  */
 
-internal class GraphAdapter
-(private var seriesHistoryDataPoints: Int, XYSeriesTitle: String, useImplicitXVals: Boolean, lineAndPointFormatterColor: Int) {
+open class GraphAdapter
+(private var seriesHistoryDataPoints: Int, XYSeriesTitle: String, lineAndPointFormatterColor: Int, useImplicitXVals: Boolean=false) {
     // Variables
     var series: SimpleXYSeries? = null
     var lineAndPointFormatter: LineAndPointFormatter = LineAndPointFormatter(lineAndPointFormatterColor, null, null, null)
-    var sampleRate: Int = 0
-    var xAxisIncrement: Double = 0.toDouble()
     var plotData: Boolean = false
 
     init {
@@ -35,19 +33,6 @@ internal class GraphAdapter
 
     fun addDataPointTimeDomain(dataX: Double, dataY: Double) {
         if (this.plotData) plot(dataX, dataY)
-    }
-
-    fun addDataPointTimeDomain(data: Double, index: Int) {
-        if (this.plotData) plot(index.toDouble() * xAxisIncrement, data)
-    }
-
-    fun setxAxisIncrementFromSampleRate(sampleRate: Int) {
-        this.sampleRate = sampleRate
-        setxAxisIncrement(1.toDouble() / sampleRate.toDouble())
-    }
-
-    fun setxAxisIncrement(xAxisIncrement: Double) {
-        this.xAxisIncrement = xAxisIncrement
     }
 
     //Graph Stuff:
@@ -70,12 +55,12 @@ internal class GraphAdapter
         series!!.addLast(x, y)
     }
 
-    private fun plotAlt(x: Double, y: Double) {
-        while (series!!.size() > seriesHistoryDataPoints - 1) {
-            series!!.removeLast()
-        }
-        series!!.addLast(x, y)
-    }
+//    private fun plotReverse(x: Double, y: Double) {
+//        while (series!!.size() > seriesHistoryDataPoints - 1) {
+//            series!!.removeLast()
+//        }
+//        series!!.addLast(x, y)
+//    }
 
     companion object {
         private val TAG = GraphAdapter::class.java.simpleName

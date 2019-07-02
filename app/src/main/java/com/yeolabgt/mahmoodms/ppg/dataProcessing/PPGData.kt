@@ -1,10 +1,11 @@
 package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
+import android.graphics.Color
 import java.util.*
 
-internal class PPGData(bufferSize: Int, addressMac: String, uuid: UUID, samplingRate: Int = 100, saveData: Boolean = true) :
+internal class PPGData(bufferSize: Int, addressMac: String, uuid: UUID, samplingRate: Int = 100, saveData: Boolean = true, channelNumber: Int=1) :
         BaseDataCollector(addressMac, uuid) {
-    var dataBuffer: DataBuffer = DataBuffer(bufferSize, true, samplingRate)
+    var dataBuffer: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 120, "PPG Ch$channelNumber", Color.BLUE)
     var dataSaver: DataSaver? = null
 
     init {

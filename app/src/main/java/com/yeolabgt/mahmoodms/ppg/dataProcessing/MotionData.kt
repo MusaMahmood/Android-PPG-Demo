@@ -1,15 +1,16 @@
 package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
+import android.graphics.Color
 import java.util.*
 
 internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, samplingRate: Int = 250, MSBFirst: Boolean = true, saveData: Boolean = true) :
         BaseDataCollector(addressMac, uuid) {
-    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate = samplingRate)
-    var dataBufferAccY: DataBuffer = DataBuffer(bufferSize)
-    var dataBufferAccZ: DataBuffer = DataBuffer(bufferSize)
-    var dataBufferGyrX: DataBuffer = DataBuffer(bufferSize)
-    var dataBufferGyrY: DataBuffer = DataBuffer(bufferSize)
-    var dataBufferGyrZ: DataBuffer = DataBuffer(bufferSize)
+    var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 375, "AccX", Color.RED)
+    var dataBufferAccY: DataBuffer = DataBuffer(bufferSize, false, samplingRate, 375, "AccY", Color.GREEN)
+    var dataBufferAccZ: DataBuffer = DataBuffer(bufferSize, false, samplingRate, 375, "AccZ", Color.BLUE)
+    var dataBufferGyrX: DataBuffer = DataBuffer(bufferSize, false, samplingRate, 375, "GyrX", Color.RED)
+    var dataBufferGyrY: DataBuffer = DataBuffer(bufferSize,false, samplingRate, 375, "GyrY", Color.GREEN)
+    var dataBufferGyrZ: DataBuffer = DataBuffer(bufferSize,false, samplingRate, 375, "GyrZ", Color.BLUE)
     // File data saver
     var dataSaver: DataSaver? = null
 

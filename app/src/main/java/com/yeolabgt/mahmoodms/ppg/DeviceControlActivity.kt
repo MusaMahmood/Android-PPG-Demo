@@ -30,6 +30,7 @@ import android.widget.ToggleButton
 import com.androidplot.util.Redrawer
 import com.yeolabgt.mahmoodms.actblelibrary.ActBle
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.DataBuffer
+import com.yeolabgt.mahmoodms.ppg.dataProcessing.GraphAdapter
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.MotionData
 import com.yeolabgt.mahmoodms.ppg.dataProcessing.PPGData
 
@@ -43,11 +44,7 @@ import java.util.*
 
 class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     // Graphing Variables:
-    private var mGraphInitializedBoolean = false
-    private var mGraphAdapterCh1: GraphAdapter? = null
-    private var mGraphAdapterMotionAX: GraphAdapter? = null
-    private var mGraphAdapterMotionAY: GraphAdapter? = null
-    private var mGraphAdapterMotionAZ: GraphAdapter? = null
+    private var mXYPlotInitializedBoolean = false
     private var mTimeDomainPlotAdapterCh1: XYPlotAdapter? = null
     private var mMotionDataPlotAdapter: XYPlotAdapter? = null
     //Device Information
@@ -57,7 +54,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var mDeviceName: String? = null
     private var mDeviceAddress: String? = null
     private var mConnected: Boolean = false
-    private var mMSBFirst = false
     //Connecting to Multiple Devices
     private var deviceMacAddresses: Array<String>? = null
     //UI Elements - TextViews, Buttons, etc
@@ -73,13 +69,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     //Data Variables:
     private val batteryWarning = 20
     private var dataRate: Double = 0.toDouble()
+    // TODO: ArrayList<BaseDataCollector>
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // TODO: Set content view based on number of devices connected?
         //Receive Intents:
         val intent = intent
         deviceMacAddresses = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_KEY)
+        // Set content view based on number of devices connected:
         when {
             deviceMacAddresses?.size == 1 -> setContentView(R.layout.activity_device_control)
             deviceMacAddresses?.size == 2 -> setContentView(R.layout.activity_device_control2)
@@ -115,8 +112,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         //UI Listeners
         mChannelSelect = findViewById(R.id.toggleButtonGraph)
         mChannelSelect!!.setOnCheckedChangeListener { _, b ->
-            mGraphAdapterCh1!!.clearPlot()
-            mGraphAdapterCh1!!.plotData = b
+//            mGraphAdapterCh1!!.clearPlot()
+//            mGraphAdapterCh1!!.plotData = b
+            //TODO:
         }
         mExportButton.setOnClickListener { exportData() }
     }
@@ -180,69 +178,24 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         mBluetoothGattArray = Array(deviceMacAddresses!!.size) { i -> mActBle!!.connect(mBluetoothDeviceArray[i]) }
         for (i in mBluetoothDeviceArray.indices) {
             Log.e(TAG, "Connecting to Device: " + (mBluetoothDeviceArray[i]!!.name + " " + mBluetoothDeviceArray[i]!!.address))
-            if ("EMG 250Hz" == mBluetoothDeviceArray[i]!!.name) {
-                mMSBFirst = false
-            } else if (mBluetoothDeviceArray[i]!!.name != null) {
-                if (mBluetoothDeviceArray[i]!!.name.toLowerCase().contains("nrf52")) {
-                    mMSBFirst = true
-                }
-            }
-            val str = mBluetoothDeviceArray[i]!!.name.toLowerCase()
-            when {
-                str.contains("8k") -> {
-                    mSampleRate = 8000
-                }
-                str.contains("4k") -> {
-                    mSampleRate = 4000
-                }
-                str.contains("2k") -> {
-                    mSampleRate = 2000
-                }
-                str.contains("1k") -> {
-                    mSampleRate = 1000
-                }
-                str.contains("500") -> {
-                    mSampleRate = 500
-                }
-                else -> {
-                    mSampleRate = 50
-                }
-            }
-            Log.e(TAG, "mSampleRate: " + mSampleRate + "Hz")
-            if (!mGraphInitializedBoolean) setupGraph()
+//            val str = mBluetoothDeviceArray[i]!!.name.toLowerCase()
+            if (!mXYPlotInitializedBoolean) setupXYPlot()
         }
         mBleInitializedBoolean = true
     }
 
-    private fun setupGraph() {
+    private fun setupXYPlot() {
         // Initialize our XYPlot reference:
-        mGraphAdapterCh1 = GraphAdapter(120, "GSR/SG", false, Color.BLUE) //Color.parseColor("#19B52C") also, RED, BLUE, etc.
-        //PLOT CH1 By default
-        mGraphAdapterCh1!!.setPointWidth(5.toFloat())
         mTimeDomainPlotAdapterCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 120, sampleRate = 4)
-        mTimeDomainPlotAdapterCh1?.xyPlot?.addSeries(mGraphAdapterCh1!!.series, mGraphAdapterCh1!!.lineAndPointFormatter)
         mMotionDataPlotAdapter = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
-        mGraphAdapterMotionAX = GraphAdapter(375, "Acc X", false, Color.RED)
-        mGraphAdapterMotionAY = GraphAdapter(375, "Acc Y", false, Color.GREEN)
-        mGraphAdapterMotionAZ = GraphAdapter(375, "Acc Z", false, Color.BLUE)
-        mMotionDataPlotAdapter?.xyPlot!!.addSeries(mGraphAdapterMotionAX?.series, mGraphAdapterMotionAX?.lineAndPointFormatter)
-        mMotionDataPlotAdapter?.xyPlot!!.addSeries(mGraphAdapterMotionAY?.series, mGraphAdapterMotionAY?.lineAndPointFormatter)
-        mMotionDataPlotAdapter?.xyPlot!!.addSeries(mGraphAdapterMotionAZ?.series, mGraphAdapterMotionAZ?.lineAndPointFormatter)
         val xyPlotList = listOf(mTimeDomainPlotAdapterCh1?.xyPlot, mMotionDataPlotAdapter?.xyPlot)
         mRedrawer = Redrawer(xyPlotList, 24f, false)
         mRedrawer!!.start()
-        mGraphInitializedBoolean = true
+        mXYPlotInitializedBoolean = true
+    }
 
-        mGraphAdapterMotionAX?.setxAxisIncrement(0.004)
-        mGraphAdapterMotionAX?.setSeriesHistoryDataPoints(375)
-        mGraphAdapterMotionAY?.setxAxisIncrement(0.004)
-        mGraphAdapterMotionAY?.setSeriesHistoryDataPoints(375)
-        mGraphAdapterMotionAZ?.setxAxisIncrement(0.004)
-        mGraphAdapterMotionAZ?.setSeriesHistoryDataPoints(375)
-
-        mGraphAdapterCh1!!.setxAxisIncrementFromSampleRate(mSampleRate)
-
-        mGraphAdapterCh1!!.setSeriesHistoryDataPoints(120)
+    private fun addGraphToPlot(graphAdapter: GraphAdapter, plotAdapter: XYPlotAdapter) {
+        plotAdapter.xyPlot!!.addSeries(graphAdapter.series, graphAdapter.lineAndPointFormatter)
     }
 
     private fun setNameAddress(name_action: String?, address_action: String?) {
@@ -345,7 +298,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             //File Save Stuff
             mTimeDomainPlotAdapterCh1!!.xyPlot?.redraw()
             mChannelSelect!!.isChecked = chSel
-            mGraphAdapterCh1!!.plotData = chSel
+//            mGraphAdapterCh1!!.plotData = chSel
         }
         super.onActivityResult(requestCode, resultCode, data)
     }
@@ -398,6 +351,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     if (service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE), true)
                         mPPG = PPGData(0, gatt.device.address, service.uuid)
+                        addGraphToPlot(mPPG?.dataBuffer!!, mTimeDomainPlotAdapterCh1!!)
                     }
                 }
 
@@ -414,6 +368,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 //                        }
 //                    }
                     mICM = MotionData(0, gatt.device.address, service.uuid)
+                    // TODO: Add ICM→GraphAdapters to corresponding plots. Then start redrawer.
+                    addGraphToPlot(mICM?.dataBufferAccX!!, mMotionDataPlotAdapter!!)
+                    addGraphToPlot(mICM?.dataBufferAccY!!, mMotionDataPlotAdapter!!)
+                    addGraphToPlot(mICM?.dataBufferAccZ!!, mMotionDataPlotAdapter!!)
                 }
             }
             //Run process only once:
@@ -448,7 +406,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             getDataRateBytes(data.size)
             mPPG?.handleNewData(data)
             if (mPPG?.packetGraphingCounter?.toInt() == 4) {
-                addToGraphBuffer(mGraphAdapterCh1!!, mPPG?.dataBuffer!!, mPPG!!.dataBuffer.timeStampsDoubles!!)
+                addToGraphBuffer(mPPG?.dataBuffer!!, mPPG!!.dataBuffer.timeStampsDoubles!!)
                 mPPG?.saveAndResetBuffers()
             }
         }
@@ -458,17 +416,17 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             getDataRateBytes(dataBytesMPU.size) //+=240
             mICM?.handleNewData(dataBytesMPU)
             if (mICM?.packetGraphingCounter?.toInt() == 8) { // Plot and reset
-                addToGraphBuffer(mGraphAdapterMotionAX!!, mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                addToGraphBuffer(mGraphAdapterMotionAY!!, mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
-                addToGraphBuffer(mGraphAdapterMotionAZ!!, mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBuffer(mICM?.dataBufferAccX!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBuffer(mICM?.dataBufferAccY!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
+                addToGraphBuffer(mICM?.dataBufferAccZ!!, mICM?.dataBufferAccX!!.timeStampsDoubles!!)
                 mICM?.saveAndResetBuffers()
             }
         }
     }
 
-    private fun addToGraphBuffer(graphAdapter: GraphAdapter, dataBuffer: DataBuffer, dataXValues: DoubleArray) {
+    private fun addToGraphBuffer(dataBuffer: DataBuffer, dataXValues: DoubleArray) {
         for (i in 0 until dataBuffer.dataBufferDoubles!!.size) {
-            graphAdapter.addDataPointTimeDomain(dataXValues[i], dataBuffer.dataBufferDoubles!![i])
+            dataBuffer.addDataPointTimeDomain(dataXValues[i], dataBuffer.dataBufferDoubles!![i])
         }
     }
 
@@ -641,8 +599,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         const val HZ = "0 Hz"
         private val TAG = DeviceControlActivity::class.java.simpleName
         var mRedrawer: Redrawer? = null
-
-        private var mSampleRate = 250
         //Data Channel Classes
         internal var mICM: MotionData? = null
         internal var mPPG: PPGData? = null

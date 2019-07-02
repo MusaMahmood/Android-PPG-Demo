@@ -2,7 +2,8 @@ package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
 import com.google.common.primitives.Doubles
 
-open class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, var samplingRate: Int = 0) {
+class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, samplingRate: Int = 0, seriesDataPoints: Int, seriesTitle: String="", color: Int):
+        GraphAdapter(seriesDataPoints, seriesTitle, color) {
     // Buffer for graphing
     var dataBufferDoubles: DoubleArray? = null
     // For Timestamps:
@@ -20,6 +21,8 @@ open class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean 
         } else {
             disableSlideBuffer()
         }
+        // GraphAdapter Stuff:
+        setPointWidth(5.toFloat())
     }
 
     private fun enableSlideBuffer(bufferSize: Int) {
