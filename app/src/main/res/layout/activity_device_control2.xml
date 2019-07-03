@@ -100,7 +100,7 @@
         android:id="@+id/battery1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
+        android:text=""
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/ppgPlot1" />
@@ -109,9 +109,27 @@
         android:id="@+id/battery2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
+        android:text=""
         app:layout_constraintEnd_toEndOf="@+id/ppgPlot2"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
         app:layout_constraintTop_toTopOf="@+id/ppgPlot1" />
+
+    <TextView
+        android:id="@+id/notif1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
+
+    <TextView
+        android:id="@+id/notif2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        app:layout_constraintEnd_toEndOf="@+id/ppgPlot2"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
 
 </android.support.constraint.ConstraintLayout>

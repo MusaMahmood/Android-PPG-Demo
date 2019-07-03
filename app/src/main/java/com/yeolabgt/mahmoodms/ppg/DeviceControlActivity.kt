@@ -67,6 +67,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var deviceMacAddresses: Array<String>? = null
     //UI Elements - TextViews, Buttons, etc
     private lateinit var mBatteryLevelTextViews: Array<TextView?>
+    private lateinit var mNotificationTextViews: Array<TextView?>
     private var mDataRate: TextView? = null
     private var mChannelSelect: ToggleButton? = null
     private var menu: Menu? = null
@@ -94,21 +95,22 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         when {
             deviceMacAddresses?.size == 1 -> {
                 setContentView(R.layout.activity_device_control)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1))
             }
             deviceMacAddresses?.size == 2 -> {
                 setContentView(R.layout.activity_device_control2)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2))
             }
             deviceMacAddresses?.size == 3 -> {
                 setContentView(R.layout.activity_device_control_multi)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3))
             }
             else -> {
                 setContentView(R.layout.activity_device_control_multi)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4))
             }
         }
+        mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4))
+        mBatteryLevelTextViews = mBatteryLevelTextViews.filterNotNull().toTypedArray()
+        mNotificationTextViews = arrayOf(findViewById(R.id.notif1), findViewById(R.id.notif2), findViewById(R.id.notif3), findViewById(R.id.notif4))
+        mNotificationTextViews = mNotificationTextViews.filterNotNull().toTypedArray()
+
         //Set orientation of device based on screen type/size:
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val deviceDisplayNames = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_NAMES)
@@ -493,6 +495,16 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                         Log.e(TAG, "result, device #$i: ${Arrays.toString(result)}")
                         // TODO: print to screen
                         mICMArrayList[i].resetClassificationBuffer()
+                        runOnUiThread {
+                            if (result.isNotEmpty()) {
+                                val notificationString = "[${String.format(Locale.US, "%.2f", result[0])}, " +
+                                        "${String.format(Locale.US, "%.2f", result[1])}, " +
+                                        "${String.format(Locale.US, "%.2f", result[2])}]"
+                                mNotificationTextViews[i]!!.text = notificationString
+                            } else {
+                                mNotificationTextViews[i]!!.text = "[]"
+                            }
+                        }
                     }
                 }
             }
