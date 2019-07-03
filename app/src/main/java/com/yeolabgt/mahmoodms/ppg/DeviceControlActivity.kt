@@ -421,7 +421,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 if (AppConstant.SERVICE_MPU == service.uuid) {
                     mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_MPU_COMBINED), true)
                     //Add to arrayList of devices/types
-                    mICMArrayList.add(MotionData(0, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp))
+                    mICMArrayList.add(MotionData(1250, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp))
                     for (i in 0 until deviceMacAddresses!!.size) {
                         // Add ICM→GraphAdapters to corresponding plots.
                         if (gatt.device.address == deviceMacAddresses!![i]) {
@@ -618,11 +618,11 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     private fun updateBatteryStatus(voltage: Double, address: String) {
         val status: String
-        val finalVoltage = voltage * 2.0 // Double voltage due to voltage divider in circuit
+        val finalVoltage = voltage * 2.0 + 0.5 // Double voltage due to voltage divider in circuit
         val finalPercent: Double = when {
-            125.0 / 3.0 * finalVoltage - 75.0 > 100.0 -> 100.0
-            125.0 / 3.0 * finalVoltage - 75.0 < 0.0 -> 0.0
-            else -> 125.0 / 3.0 * finalVoltage - 75.0
+            finalVoltage >= 4.0 -> 100.0
+            finalVoltage < 4.0 && finalVoltage >= 3.6 -> ((finalVoltage-3.6)/0.4)*99 + 1
+            else -> 1.0 // <3.6V
         }
         Log.e(TAG, "Device $address, BattVoltage: " + String.format(Locale.US, "%.3f", finalVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
         status = address + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"
