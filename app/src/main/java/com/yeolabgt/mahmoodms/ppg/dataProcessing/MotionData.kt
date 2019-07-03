@@ -45,6 +45,7 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileT
         this.dataBufferGyrY.addToBuffer(tempDoubleArrayGyrY)
         this.dataBufferGyrZ.addToBuffer(tempDoubleArrayGyrZ)
         totalDataPointsReceived += bytes.size / 12
+        classificationCounter += bytes.size / 12
     }
 
     fun setGyroRange(range: Double) {
@@ -74,7 +75,7 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileT
     companion object {
         private var MSBFirst: Boolean = false
         var gyroRange = 4000.0
-        var accelRange = 16.0
+        var accelRange = 30.0
 
         fun bytesToDoubleMPUAccel(a1: Byte, a2: Byte): Double {
             val unsigned: Int = unsignedBytesToInt(a1, a2, MSBFirst)

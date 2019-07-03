@@ -486,6 +486,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         mICMArrayList[i].saveAndResetBuffers()
                     }
+                    if (mICMArrayList[i].classificationCounter >= 1248) {
+                        val result = jpunchDetection(mICMArrayList[i].dataBufferAccX.classificationBuffer!!,
+                                mICMArrayList[i].dataBufferAccY.classificationBuffer!!,
+                                mICMArrayList[i].dataBufferAccZ.classificationBuffer!!, 250.0)
+                        Log.e(TAG, "result, device #$i: ${Arrays.toString(result)}")
+                        // TODO: print to screen
+                        mICMArrayList[i].resetClassificationBuffer()
+                    }
                 }
             }
         }
@@ -659,6 +667,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             }
         }
     }
+
+    private external fun jpunchDetection(accX: DoubleArray, accY: DoubleArray, accZ: DoubleArray, sampleRate: Double): DoubleArray
 
     private external fun jmainInitialization(initialize: Boolean): Int
 

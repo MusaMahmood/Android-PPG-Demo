@@ -10,6 +10,7 @@ import java.util.*
 open class BaseDataCollector(addressMac: String, uuid: UUID) {
     var byteBuffer: ByteArray? = null
     var packetGraphingCounter: Short = 0 // Used for updating graph, up to 255 packets/refresh
+    var classificationCounter: Int = 0
     // Metrics
     var totalBytesRecieved: Long = 0
     var totalPacketsRecieved: Int = 0
@@ -41,6 +42,10 @@ open class BaseDataCollector(addressMac: String, uuid: UUID) {
     internal fun resetBuffer() {
         this.byteBuffer = null
         packetGraphingCounter = 0
+    }
+
+    internal fun resetClassificationBuffer() {
+        this.classificationCounter = 0
     }
 
     companion object {
