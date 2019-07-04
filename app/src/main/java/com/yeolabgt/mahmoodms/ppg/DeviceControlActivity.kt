@@ -59,6 +59,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     //Device Information
     private var mBleInitializedBoolean = false
     private lateinit var mBluetoothGattArray: Array<BluetoothGatt?>
+    private var mPunchDataSaverArray = ArrayList<DataSaver>()
+    private var mBatteryDataSaverArray = ArrayList<DataSaver>()
     private var mActBle: ActBle? = null
     private var mDeviceName: String? = null
     private var mDeviceAddress: String? = null
@@ -85,6 +87,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     private val mTimeStamp: String
         get() = SimpleDateFormat("yyyy.MM.dd_HH.mm.ss", Locale.US).format(Date())
+
+    private val mTimeStampTimeOnly: String
+        get() = SimpleDateFormat("HH.mm.ss", Locale.US).format(Date())
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -174,6 +179,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", icm.dataSaver?.file!!)
             files.add(uii)
         }
+        for (file in mPunchDataSaverArray) {
+            val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", file.file!!)
+            files.add(uii)
+        }
+        for (file in mBatteryDataSaverArray) {
+            val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", file.file!!)
+            files.add(uii)
+        }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
         exportData.putExtra(Intent.EXTRA_SUBJECT, "PPG/ICM Sensor Data Export Details")
         exportData.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
@@ -189,6 +202,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
         for (motionData in mICMArrayList) {
             motionData.dataSaver?.terminateDataFileWriter()
+        }
+        for (file in mPunchDataSaverArray) {
+            file.terminateDataFileWriter()
+        }
+        for (file in mBatteryDataSaverArray) {
+            file.terminateDataFileWriter()
         }
     }
 
@@ -221,7 +240,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         mBluetoothGattArray = Array(deviceMacAddresses!!.size) { i -> mActBle!!.connect(mBluetoothDeviceArray[i]) }
         for (i in mBluetoothDeviceArray.indices) {
             Log.e(TAG, "Connecting to Device: " + (mBluetoothDeviceArray[i]!!.name + " " + mBluetoothDeviceArray[i]!!.address))
-//            val str = mBluetoothDeviceArray[i]!!.name.toLowerCase()
+            mPunchDataSaverArray.add(DataSaver("/PunchData", "Punchdata", mBluetoothDeviceArray[i]!!.address, mTimeStamp, 0))
+            mBatteryDataSaverArray.add(DataSaver("/BatteryData", "BattInfo", mBluetoothDeviceArray[i]!!.address, mTimeStamp, 0))
         }
         if (!mXYPlotInitializedBoolean) setupXYPlot()
         mBleInitializedBoolean = true
@@ -492,9 +512,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                         val result = jpunchDetection(mICMArrayList[i].dataBufferAccX.classificationBuffer!!,
                                 mICMArrayList[i].dataBufferAccY.classificationBuffer!!,
                                 mICMArrayList[i].dataBufferAccZ.classificationBuffer!!, 250.0)
-                        Log.e(TAG, "result, device #$i: ${Arrays.toString(result)}")
-                        // TODO: print to screen
                         mICMArrayList[i].resetClassificationBuffer()
+                        Log.e(TAG, "result, device #$i: ${Arrays.toString(result)}")
+                        mPunchDataSaverArray[i].saveTimestampedDoubleArray(mTimeStampTimeOnly, result)
+                        // print to screen
                         runOnUiThread {
                             if (result.isNotEmpty()) {
                                 val notificationString = "[${String.format(Locale.US, "%.2f", result[0])}, " +
@@ -641,7 +662,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         val finalVoltage = voltage * 2.0 + 0.5 // Double voltage due to voltage divider in circuit
         val finalPercent: Double = when {
             finalVoltage >= 4.0 -> 100.0
-            finalVoltage < 4.0 && finalVoltage >= 3.6 -> ((finalVoltage-3.6)/0.4)*99 + 1
+            finalVoltage < 4.0 && finalVoltage >= 3.6 -> ((finalVoltage - 3.6) / 0.4) * 99 + 1
             else -> 1.0 // <3.6V
         }
         Log.e(TAG, "Device $address, BattVoltage: " + String.format(Locale.US, "%.3f", finalVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
@@ -659,6 +680,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     }
                     mBatteryLevelTextViews[i]!!.text = status
                 }
+                mBatteryDataSaverArray[i].saveTimestampedDoubles(mTimeStampTimeOnly, voltage * 2.0)
                 break
             }
         }
