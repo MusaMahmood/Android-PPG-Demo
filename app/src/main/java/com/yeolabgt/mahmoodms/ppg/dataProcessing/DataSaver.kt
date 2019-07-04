@@ -6,26 +6,27 @@ import com.opencsv.CSVWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
-import java.util.*
 
 internal class DataSaver(directoryName: String, dataType: String, addressMac: String, fileTimestamp: String, samplingRate: Int, splitFilesAfter: Int = 0) {
-    var fileName: String
+    private var fileName: String
     var file: File? = null
     private var csvWriter: CSVWriter? = null
-    var initialized = false
+    private var initialized = false
     // For File Splitting
-    var splitFiles: Boolean = splitFilesAfter > 0
-    var fileNumber = 1
-    var totalLinesWritten: Long = 0
-    var totalLinesWrittenCurrentFile: Long = 0
+    private var splitFiles: Boolean = splitFilesAfter > 0
+    private var fileNumber = 1
+    private var totalLinesWritten: Long = 0
+    private var totalLinesWrittenCurrentFile: Long = 0
 
     init {
         fileName = if (splitFiles) {
             "${dataType}_${addressMac.replace(":", "")}_${fileTimestamp}_${samplingRate}_" + "$fileNumber".padStart(3)
         } else {
-            "${dataType}_${addressMac.replace(":", "")}_${fileTimestamp}_$samplingRate"
+            if (samplingRate != 0) {
+                "${dataType}_${addressMac.replace(":", "")}_${fileTimestamp}_$samplingRate"
+            } else {
+                "${dataType}_${addressMac.replace(":", "")}_$fileTimestamp"
+            }
         }
         createNewFile(directoryName, fileName)
     }
@@ -57,6 +58,26 @@ internal class DataSaver(directoryName: String, dataType: String, addressMac: St
         }
     }
 
+    fun saveTimestampedDoubleArray(timestamp: String, doubleArray: DoubleArray) {
+        val write = arrayOfNulls<String>(doubleArray.size + 1)
+        write[0] = timestamp
+        for (i in doubleArray.indices) {
+            write[i + 1] = doubleArray[i].toString() + ""
+        }
+        csvWriter!!.writeNext(write, false)
+        this.totalLinesWritten++
+        this.totalLinesWrittenCurrentFile++
+    }
+
+    fun saveTimestampedDoubles(timestamp: String, double: Double) {
+        val write = arrayOfNulls<String>(2)
+        write[0] = timestamp
+        write[1] = double.toString()
+        csvWriter!!.writeNext(write, false)
+        this.totalLinesWritten++
+        this.totalLinesWrittenCurrentFile++
+    }
+
     @Throws(IOException::class)
     fun exportFile(vararg doubles: DoubleArray) {
         val numDp = doubles[0].size
@@ -73,7 +94,7 @@ internal class DataSaver(directoryName: String, dataType: String, addressMac: St
             // TODO: reset after x number lines written
 //            if (this.totalLinesWrittenCurrentFile > splitFilesAfter) {
 //                terminateDataFileWriter()
-//                // Create new filewriter
+//                // TODO: Create new filewriter
 //            }
         }
     }

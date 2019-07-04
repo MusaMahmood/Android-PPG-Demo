@@ -1,8 +1,9 @@
 package com.yeolabgt.mahmoodms.ppg.dataProcessing
 
+import android.util.Log
 import com.google.common.primitives.Doubles
 
-class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, samplingRate: Int = 0, seriesDataPoints: Int, seriesTitle: String="", color: Int):
+class DataBuffer(private var slideBufferSize: Int, private var saveTimeStamps: Boolean = false, samplingRate: Int = 0, seriesDataPoints: Int, seriesTitle: String="", color: Int):
         GraphAdapter(seriesDataPoints, seriesTitle, color) {
     // Buffer for graphing
     var dataBufferDoubles: DoubleArray? = null
@@ -12,7 +13,6 @@ class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = fal
     private var totalDatapointIndex: Long = 0
     // Slide buffer Only
     private var slideBufferEnabled: Boolean = false
-    var bufferSize: Int = 0
     var classificationBuffer: DoubleArray? = null
 
     init {
@@ -59,12 +59,12 @@ class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = fal
     }
 
     private fun addToDoublesBuffer(dataBufferDouble: DoubleArray) {
-        if (this.bufferSize > 0) {
+        if (slideBufferEnabled) {
             val newDataPoints = dataBufferDouble.size
             // Shift Data Backwards by N Amount
-            System.arraycopy(this.classificationBuffer!!, newDataPoints, this.classificationBuffer, 0, this.bufferSize - newDataPoints)
+            System.arraycopy(this.classificationBuffer!!, newDataPoints, this.classificationBuffer, 0, this.slideBufferSize - newDataPoints)
             // Copy new data to front of data
-            dataBufferDouble.copyInto(this.classificationBuffer!!, this.bufferSize - newDataPoints, 0, newDataPoints)
+            dataBufferDouble.copyInto(this.classificationBuffer!!, this.slideBufferSize - newDataPoints, 0, newDataPoints)
         }
     }
 

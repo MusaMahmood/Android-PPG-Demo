@@ -28,7 +28,11 @@ add_library( # Sets the name of the library.
 
                 # Main C++ Data Processing Files
                 # Executor
-                src/main/cpp/jniExecutor.cpp)
+                src/main/cpp/jniExecutor.cpp
+                src/main/cpp/punchDetection.cpp
+                src/main/cpp/rt_nonfinite.cpp
+                src/main/cpp/rtGetInf.cpp
+                src/main/cpp/rtGetNaN.cpp)
 
 # The following line allows for auto-including header files in the listed directory:
 include_directories(src/main/cpp/)

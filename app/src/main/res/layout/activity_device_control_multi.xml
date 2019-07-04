@@ -161,7 +161,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
     <TextView
         android:id="@+id/battery2"
@@ -169,7 +169,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
     <TextView
         android:id="@+id/battery3"
@@ -177,7 +177,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
 
     <TextView
         android:id="@+id/battery4"
@@ -185,6 +185,38 @@
         android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
+
+    <TextView
+        android:id="@+id/notif1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/guidelineHorz" />
+
+    <TextView
+        android:id="@+id/notif2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintTop_toBottomOf="@+id/guidelineHorz" />
+
+    <TextView
+        android:id="@+id/notif3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintTop_toBottomOf="@+id/guidelineHorz" />
+
+    <TextView
+        android:id="@+id/notif4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintTop_toBottomOf="@+id/guidelineHorz" />
 
 </android.support.constraint.ConstraintLayout>
