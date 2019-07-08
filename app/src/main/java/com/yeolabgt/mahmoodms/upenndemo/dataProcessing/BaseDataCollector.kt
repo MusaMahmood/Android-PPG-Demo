@@ -44,11 +44,23 @@ open class BaseDataCollector(addressMac: String, uuid: UUID) {
     }
 
     companion object {
+        fun unsignedToSigned24bit(unsigned: Int): Int {
+            return if (unsigned and 0x800000 != 0) -1 * (0x800000 - (unsigned and 0x800000 - 1))
+            else unsigned
+        }
+
         fun unsignedToSigned16bit(unsigned: Int): Int {
             return if (unsigned and 0x8000 != 0)
                 -1 * (0x8000 - (unsigned and 0x8000 - 1))
             else
                 unsigned
+        }
+
+        fun unsignedBytesToInt(b0: Byte, b1: Byte, b2: Byte, MSBFirst: Boolean): Int {
+            return if (MSBFirst)
+                (unsignedByteToInt(b0) shl 16) + (unsignedByteToInt(b1) shl 8) + unsignedByteToInt(b2)
+            else
+                unsignedByteToInt(b0) + (unsignedByteToInt(b1) shl 8) + (unsignedByteToInt(b2) shl 16)
         }
 
         fun unsignedBytesToInt(b0: Byte, b1: Byte, MSBFirst: Boolean): Int {

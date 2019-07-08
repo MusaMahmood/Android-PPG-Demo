@@ -11,7 +11,7 @@
 
 extern "C" {
 JNIEXPORT jint JNICALL
-Java_com_yeolabgt_mahmoodms_ppg_DeviceControlActivity_jmainInitialization(
+Java_com_yeolabgt_mahmoodms_upenndemo_DeviceControlActivity_jmainInitialization(
         JNIEnv *env, jobject obj, jboolean initialize) {
     if (!(bool) initialize) {
         return 0;

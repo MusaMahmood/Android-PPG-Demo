@@ -46,16 +46,19 @@ import kotlin.collections.ArrayList
 class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     // Graphing Variables:
     private var mXYPlotInitializedBoolean = false
-    private lateinit var mXYPlotArray: Array<XYPlotAdapter?>
-    private lateinit var mMotionPlotArray: Array<XYPlotAdapter?>
-    private var mPlotCh1: XYPlotAdapter? = null
-    private var mPlotCh2: XYPlotAdapter? = null
-    private var mPlotCh3: XYPlotAdapter? = null
-    private var mPlotCh4: XYPlotAdapter? = null
-    private var mMotionPlotCh1: XYPlotAdapter? = null
-    private var mMotionPlotCh2: XYPlotAdapter? = null
-    private var mMotionPlotCh3: XYPlotAdapter? = null
-    private var mMotionPlotCh4: XYPlotAdapter? = null
+    private lateinit var mAccelPlotArray: Array<XYPlotAdapter?>
+    private lateinit var mGyroPlotArray: Array<XYPlotAdapter?>
+    private var mExGPlot: XYPlotAdapter? = null
+    private var mAccelPlotCh1: XYPlotAdapter? = null
+    private var mAccelPlotCh2: XYPlotAdapter? = null
+    private var mAccelPlotCh3: XYPlotAdapter? = null
+    private var mAccelPlotCh4: XYPlotAdapter? = null
+    private var mAccelPlotCh5: XYPlotAdapter? = null
+    private var mGyroPlotCh1: XYPlotAdapter? = null
+    private var mGyroPlotCh2: XYPlotAdapter? = null
+    private var mGyroPlotCh3: XYPlotAdapter? = null
+    private var mGyroPlotCh4: XYPlotAdapter? = null
+    private var mGyroPlotCh5: XYPlotAdapter? = null
     //Device Information
     private var mBleInitializedBoolean = false
     private lateinit var mBluetoothGattArray: Array<BluetoothGatt?>
@@ -79,8 +82,11 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private val batteryWarning = 20
     private var dataRate: Double = 0.toDouble()
     // ArrayList<DataType>
+    private var mExGArrayList = ArrayList<ExGData>()
     private var mPPGArrayList = ArrayList<PPGData>()
     private var mICMArrayList = ArrayList<MotionData>()
+    //
+    private var emgPresentFlag = false
 
     private val mTimeStamp: String
         get() = SimpleDateFormat("yyyy.MM.dd_HH.mm.ss", Locale.US).format(Date())
@@ -90,28 +96,23 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         //Receive Intents:
         val intent = intent
         deviceMacAddresses = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_KEY)
-        // Set content view based on number of devices connected:
-        when {
-            deviceMacAddresses?.size == 1 -> {
-                setContentView(R.layout.activity_device_control)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1))
-            }
-            deviceMacAddresses?.size == 2 -> {
-                setContentView(R.layout.activity_device_control2)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2))
-            }
-            deviceMacAddresses?.size == 3 -> {
-                setContentView(R.layout.activity_device_control_multi)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3))
-            }
-            else -> {
-                setContentView(R.layout.activity_device_control_multi)
-                mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4))
-            }
-        }
         //Set orientation of device based on screen type/size:
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val deviceDisplayNames = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_NAMES)
+        // Set content view based on number of devices connected:
+        for (deviceName in deviceDisplayNames) {
+            if (deviceName.toLowerCase().contains("emg") ||
+                    deviceName.toLowerCase().contains("ecg")) {
+                // Contains EMG Data:
+                emgPresentFlag = true
+                break
+            }
+        }
+        if (emgPresentFlag) {
+            setContentView(R.layout.activity_device_control_multi2)
+        } else {
+            setContentView(R.layout.activity_device_control_multi)
+        }
         mDeviceName = deviceDisplayNames[0]
         mDeviceAddress = deviceMacAddresses!![0]
         Log.d(TAG, "Device Names: " + Arrays.toString(deviceDisplayNames))
@@ -138,6 +139,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         //UI Listeners
         mChannelSelect = findViewById(R.id.toggleButtonGraph)
         mChannelSelect!!.setOnCheckedChangeListener { _, b ->
+            for (exgData in mExGArrayList) {
+                exgData.dataBuffer.clearPlot()
+                exgData.dataBuffer.plotData = b
+            }
             for (ppgData in mPPGArrayList) {
                 ppgData.dataBuffer.clearPlot()
                 ppgData.dataBuffer.plotData = b
@@ -149,6 +154,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 motionData.dataBufferAccY.plotData = b
                 motionData.dataBufferAccZ.clearPlot()
                 motionData.dataBufferAccZ.plotData = b
+                motionData.dataBufferGyrX.clearPlot()
+                motionData.dataBufferGyrX.plotData = b
+                motionData.dataBufferGyrY.clearPlot()
+                motionData.dataBufferGyrY.plotData = b
+                motionData.dataBufferGyrZ.clearPlot()
+                motionData.dataBufferGyrZ.plotData = b
             }
         }
         mExportButton.setOnClickListener { exportData() }
@@ -163,7 +174,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
         val files = ArrayList<Uri>()
         val context = applicationContext
-        // TODO: add all files from DataChannels.
         for (ppg in mPPGArrayList) {
             val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", ppg.dataSaver?.file!!)
             files.add(uii)
@@ -172,8 +182,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", icm.dataSaver?.file!!)
             files.add(uii)
         }
+        for (exg in mExGArrayList) {
+            val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", exg.dataSaver?.file!!)
+            files.add(uii)
+        }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
-        exportData.putExtra(Intent.EXTRA_SUBJECT, "PPG/ICM Sensor Data Export Details")
+        exportData.putExtra(Intent.EXTRA_SUBJECT, "Sensor Data Export Details")
         exportData.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
         exportData.type = "text/html"
         startActivity(exportData)
@@ -182,6 +196,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     @Throws(IOException::class)
     private fun terminateDataFileWriter() {
         //Terminate all files
+        for (exgData in mExGArrayList) {
+            exgData.dataSaver?.terminateDataFileWriter()
+        }
         for (ppgData in mPPGArrayList) {
             ppgData.dataSaver?.terminateDataFileWriter()
         }
@@ -227,24 +244,32 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     private fun setupXYPlot() {
         // Initialize our XYPlot reference:
-        mPlotCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 500, sampleRate = 4)
-        mMotionPlotCh1 = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
+        mAccelPlotCh1 = XYPlotAdapter(findViewById(R.id.accelPlot1), "Time (s)", "Acc (g)", 375.0)
+        mGyroPlotCh1 = XYPlotAdapter(findViewById(R.id.gyroPlot1), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         if (deviceMacAddresses!!.size >= 2) {
-            mPlotCh2 = XYPlotAdapter(findViewById(R.id.ppgPlot2), false, 500, sampleRate = 4)
-            mMotionPlotCh2 = XYPlotAdapter(findViewById(R.id.motionPlot2), "Time (s)", "Acc (g)", 375.0)
+            mAccelPlotCh2 = XYPlotAdapter(findViewById(R.id.accelPlot2), "Time (s)", "Acc (g)", 375.0)
+            mGyroPlotCh2 = XYPlotAdapter(findViewById(R.id.gyroPlot2), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         }
         if (deviceMacAddresses!!.size >= 3) {
-            mPlotCh3 = XYPlotAdapter(findViewById(R.id.ppgPlot3), false, 500, sampleRate = 4)
-            mMotionPlotCh3 = XYPlotAdapter(findViewById(R.id.motionPlot3), "Time (s)", "Acc (g)", 375.0)
+            mAccelPlotCh3 = XYPlotAdapter(findViewById(R.id.accelPlot3), "Time (s)", "Acc (g)", 375.0)
+            mGyroPlotCh3 = XYPlotAdapter(findViewById(R.id.gyroPlot3), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         }
         if (deviceMacAddresses!!.size >= 4) {
-            mPlotCh4 = XYPlotAdapter(findViewById(R.id.ppgPlot4), false, 500, sampleRate = 4)
-            mMotionPlotCh4 = XYPlotAdapter(findViewById(R.id.motionPlot4), "Time (s)", "Acc (g)", 375.0)
+            mAccelPlotCh4 = XYPlotAdapter(findViewById(R.id.accelPlot4), "Time (s)", "Acc (g)", 375.0)
+            mGyroPlotCh4 = XYPlotAdapter(findViewById(R.id.gyroPlot4), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         }
-        mXYPlotArray = arrayOf(mPlotCh1, mPlotCh2, mPlotCh3, mPlotCh4)
-        mMotionPlotArray = arrayOf(mMotionPlotCh1, mMotionPlotCh2, mMotionPlotCh3, mMotionPlotCh4)
-        val xyPlotList = listOf(mPlotCh1?.xyPlot, mPlotCh2?.xyPlot, mPlotCh3?.xyPlot, mPlotCh4?.xyPlot,
-                mMotionPlotCh1?.xyPlot, mMotionPlotCh2?.xyPlot, mMotionPlotCh3?.xyPlot, mMotionPlotCh4?.xyPlot)
+        if (deviceMacAddresses!!.size >= 5) {
+            mAccelPlotCh5 = XYPlotAdapter(findViewById(R.id.accelPlot5), "Time (s)", "Acc (g)", 375.0)
+            mGyroPlotCh5 = XYPlotAdapter(findViewById(R.id.gyroPlot5), "Time (s)", "Ang. Velocity (°/s)", 375.0)
+        }
+        if (emgPresentFlag) {
+            mExGPlot = XYPlotAdapter(findViewById(R.id.emgPlot), false, 2000, sampleRate = 4)
+        }
+        mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4), findViewById(R.id.battery5))
+        mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2, mAccelPlotCh3, mAccelPlotCh4, mAccelPlotCh5)
+        mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2, mGyroPlotCh3, mGyroPlotCh4, mGyroPlotCh5)
+        val xyPlotList = listOf(mAccelPlotCh1?.xyPlot, mAccelPlotCh2?.xyPlot, mAccelPlotCh3?.xyPlot, mAccelPlotCh4?.xyPlot, mAccelPlotCh5?.xyPlot,
+                mGyroPlotCh1?.xyPlot, mGyroPlotCh2?.xyPlot, mGyroPlotCh3?.xyPlot, mGyroPlotCh4?.xyPlot, mGyroPlotCh5?.xyPlot, mExGPlot?.xyPlot)
         mRedrawer = Redrawer(xyPlotList.filterNotNull(), 24f, false)
         mRedrawer!!.start()
         mXYPlotInitializedBoolean = true
@@ -385,9 +410,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                         mActBle!!.readCharacteristic(gatt, service.getCharacteristic(AppConstant.CHAR_SOFTWARE_REV))
                     }
                 }
+
                 if (AppConstant.SERVICE_EEG_SIGNAL == service.uuid) {
                     if (service.getCharacteristic(AppConstant.CHAR_EEG_CH1_SIGNAL) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_EEG_CH1_SIGNAL), true)
+                        mExGArrayList.add(ExGData(0, gatt.device.address, AppConstant.CHAR_EEG_CH1_SIGNAL, mTimeStamp))
+                        addGraphToPlot(mExGArrayList[mExGArrayList.lastIndex].dataBuffer, mExGPlot!!)
                     }
                     if (service.getCharacteristic(AppConstant.CHAR_EEG_CH2_SIGNAL) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_EEG_CH2_SIGNAL), true)
@@ -404,12 +432,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     if (service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE), true)
                         mPPGArrayList.add(PPGData(0, gatt.device.address, AppConstant.CHAR_STRAIN_GAUGE, mTimeStamp))
-                        for (i in 0 until deviceMacAddresses!!.size) {
-                            if (gatt.device.address == deviceMacAddresses!![i]) {
-                                addGraphToPlot(mPPGArrayList[mPPGArrayList.lastIndex].dataBuffer, mXYPlotArray[i]!!)
-                                break
-                            }
-                        }
                     }
                 }
 
@@ -425,9 +447,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     for (i in 0 until deviceMacAddresses!!.size) {
                         // Add ICM→GraphAdapters to corresponding plots.
                         if (gatt.device.address == deviceMacAddresses!![i]) {
-                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccX, mMotionPlotArray[i]!!)
-                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccY, mMotionPlotArray[i]!!)
-                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccZ, mMotionPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccX, mAccelPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccY, mAccelPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccZ, mAccelPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferGyrX, mGyroPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferGyrY, mGyroPlotArray[i]!!)
+                            addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferGyrZ, mGyroPlotArray[i]!!)
                             break
                         }
                     }
@@ -459,6 +484,21 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             updateBatteryStatus(batteryLevel, gatt.device.address)
         }
 
+        if (AppConstant.CHAR_EEG_CH1_SIGNAL == characteristic.uuid) {
+            val data = characteristic.value
+            getDataRateBytes(data.size)
+            for (i in 0 until deviceMacAddresses!!.size) {
+                if (deviceMacAddresses!![i] == gatt.device.address) {
+                    mExGArrayList[i].handleNewData(data)
+                    if (mExGArrayList[i].packetGraphingCounter.toInt() == 4) {
+                        addToGraphBuffer(mExGArrayList[i].dataBuffer, mExGArrayList[i].dataBuffer.timeStampsDoubles!!)
+                        mExGArrayList[i].saveAndResetBuffers()
+                        return
+                    }
+                }
+            }
+        }
+
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
@@ -484,6 +524,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                        addToGraphBuffer(mICMArrayList[i].dataBufferGyrX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                        addToGraphBuffer(mICMArrayList[i].dataBufferGyrY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                        addToGraphBuffer(mICMArrayList[i].dataBufferGyrZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         mICMArrayList[i].saveAndResetBuffers()
                     }
                 }
