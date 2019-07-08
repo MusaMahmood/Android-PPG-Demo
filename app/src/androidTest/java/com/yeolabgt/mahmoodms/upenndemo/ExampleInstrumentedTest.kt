@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.ppg
+package com.yeolabgt.mahmoodms.upenndemo
 
 import android.support.test.InstrumentationRegistry
 import android.support.test.runner.AndroidJUnit4

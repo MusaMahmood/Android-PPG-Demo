@@ -25,7 +25,7 @@ project.ext.ASSET_DIR = getProjectDir().toString() + '/assets'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.yeolabgt.mahmoodms.ppg"
+        applicationId "com.yeolabgt.mahmoodms.upenndemo"
         minSdkVersion 22
         targetSdkVersion 28
         versionCode 1

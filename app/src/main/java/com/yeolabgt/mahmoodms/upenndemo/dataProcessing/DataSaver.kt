@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.ppg.dataProcessing
+package com.yeolabgt.mahmoodms.upenndemo.dataProcessing
 
 import android.os.Environment
 import android.util.Log
@@ -6,9 +6,6 @@ import com.opencsv.CSVWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
-import java.sql.Timestamp
-import java.text.SimpleDateFormat
-import java.util.*
 
 internal class DataSaver(directoryName: String, dataType: String, addressMac: String, fileTimestamp: String, samplingRate: Int, splitFilesAfter: Int = 0) {
     var fileName: String

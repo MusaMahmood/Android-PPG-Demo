@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.ppg
+package com.yeolabgt.mahmoodms.upenndemo
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
@@ -29,9 +29,9 @@ import android.widget.ToggleButton
 
 import com.androidplot.util.Redrawer
 import com.yeolabgt.mahmoodms.actblelibrary.ActBle
-import com.yeolabgt.mahmoodms.ppg.dataProcessing.*
-import com.yeolabgt.mahmoodms.ppg.dataProcessing.MotionData
-import com.yeolabgt.mahmoodms.ppg.dataProcessing.PPGData
+import com.yeolabgt.mahmoodms.upenndemo.dataProcessing.*
+import com.yeolabgt.mahmoodms.upenndemo.dataProcessing.MotionData
+import com.yeolabgt.mahmoodms.upenndemo.dataProcessing.PPGData
 
 import java.io.IOException
 import java.text.SimpleDateFormat
