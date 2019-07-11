@@ -484,14 +484,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
-            for (i in 0 until deviceMacAddresses!!.size) {
-                if (deviceMacAddresses!![i] == gatt.device.address) {
+            for (i in 0 until mPPGArrayList.size) {
+                if (mPPGArrayList[i].mAddress == gatt.device.address) {
                     mPPGArrayList[i].handleNewData(data)
                     if (mPPGArrayList[i].packetGraphingCounter.toInt() == 1) {
                         addToGraphBuffer(mPPGArrayList[i].dataBuffer, mPPGArrayList[i].dataBuffer.timeStampsDoubles!!)
                         mPPGArrayList[i].saveAndResetBuffers()
-                        return // we can return here because there's nothing left to do with this char
                     }
+                    return // we can return here because there's nothing left to do with this char
                 }
             }
         }
@@ -499,8 +499,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_MPU_COMBINED == characteristic.uuid) {
             val dataPacket = characteristic.value
             getDataRateBytes(dataPacket.size) //+=240
-            for (i in 0 until deviceMacAddresses!!.size) {
-                if (deviceMacAddresses!![i] == gatt.device.address) {
+            for (i in 0 until mICMArrayList.size) {
+                if (mICMArrayList[i].mAddress == gatt.device.address) {
                     mICMArrayList[i].handleNewData(dataPacket)
                     if (mICMArrayList[i].packetGraphingCounter.toInt() == 4) {
                         addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
@@ -527,6 +527,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                             }
                         }
                     }
+                    return
                 }
             }
         }
