@@ -8,17 +8,18 @@ import java.util.*
  */
 
 open class BaseDataCollector(addressMac: String, uuid: UUID) {
-    var byteBuffer: ByteArray? = null
+    private var byteBuffer: ByteArray? = null
     var packetGraphingCounter: Short = 0 // Used for updating graph, up to 255 packets/refresh
     var classificationCounter: Int = 0
     // Metrics
-    var totalBytesRecieved: Long = 0
-    var totalPacketsRecieved: Int = 0
+    private var totalBytesRecieved: Long = 0
+    private var totalPacketsRecieved: Int = 0
     var totalDataPointsReceived: Long = 0
     // Identifying info
     val mAddress: String
-    val mUUID: UUID
-
+    private val mUUID: UUID
+    // Graph and storage synchronization:
+    var sync: Boolean = false
 
     init {
         this.packetGraphingCounter = 0

@@ -41,18 +41,11 @@ internal class XYPlotAdapter {
         this.xyPlot!!.setRangeStep(StepMode.SUBDIVIDE, 5.0)
     }
 
-    constructor(findViewByID: View, plotImplicitXVals: Boolean, historySize: Int, sampleRate: Int=250, domainLabel: String="Time (s)", rangeLabel: String="Voltage (V)") {
+    constructor(findViewByID: View, domainStepValue: Double, domainLabel: String="Time (s)", rangeLabel: String="Voltage (V)") {
         this.xyPlot = findViewByID as XYPlot
-        val historySeconds = historySize / sampleRate
-        if (plotImplicitXVals) {
-            this.xyPlot!!.setDomainBoundaries(0, historySize, BoundaryMode.FIXED)
-            this.xyPlot!!.domainStepMode = StepMode.INCREMENT_BY_VAL
-            this.xyPlot!!.domainStepValue = (historySize / 5).toDouble()
-        } else {
-            this.xyPlot!!.setDomainBoundaries(0, historySeconds, BoundaryMode.AUTO)
-            this.xyPlot!!.domainStepMode = StepMode.INCREMENT_BY_VAL
-            this.xyPlot!!.domainStepValue = (historySeconds / 4).toDouble()
-        }
+        this.xyPlot!!.setDomainBoundaries(0, 5, BoundaryMode.AUTO)
+        this.xyPlot!!.domainStepMode = StepMode.INCREMENT_BY_VAL
+        this.xyPlot!!.domainStepValue = domainStepValue
         //Default Config:
         this.xyPlot!!.rangeStepMode = StepMode.INCREMENT_BY_VAL
         this.xyPlot!!.setDomainLabel(domainLabel)

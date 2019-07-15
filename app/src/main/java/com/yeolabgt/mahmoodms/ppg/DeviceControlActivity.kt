@@ -170,7 +170,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
         val files = ArrayList<Uri>()
         val context = applicationContext
-        // TODO: add all files from DataChannels.
         for (ppg in mPPGArrayList) {
             val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", ppg.dataSaver?.file!!)
             files.add(uii)
@@ -249,19 +248,19 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     private fun setupXYPlot() {
         // Initialize our XYPlot reference:
-        mPlotCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), false, 500, sampleRate = 4)
-        mMotionPlotCh1 = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 375.0)
+        mPlotCh1 = XYPlotAdapter(findViewById(R.id.ppgPlot1), 1.0)
+        mMotionPlotCh1 = XYPlotAdapter(findViewById(R.id.motionPlot1), "Time (s)", "Acc (g)", 1.0)
         if (deviceMacAddresses!!.size >= 2) {
-            mPlotCh2 = XYPlotAdapter(findViewById(R.id.ppgPlot2), false, 500, sampleRate = 4)
-            mMotionPlotCh2 = XYPlotAdapter(findViewById(R.id.motionPlot2), "Time (s)", "Acc (g)", 375.0)
+            mPlotCh2 = XYPlotAdapter(findViewById(R.id.ppgPlot2), 1.0)
+            mMotionPlotCh2 = XYPlotAdapter(findViewById(R.id.motionPlot2), "Time (s)", "Acc (g)", 1.0)
         }
         if (deviceMacAddresses!!.size >= 3) {
-            mPlotCh3 = XYPlotAdapter(findViewById(R.id.ppgPlot3), false, 500, sampleRate = 4)
-            mMotionPlotCh3 = XYPlotAdapter(findViewById(R.id.motionPlot3), "Time (s)", "Acc (g)", 375.0)
+            mPlotCh3 = XYPlotAdapter(findViewById(R.id.ppgPlot3), 1.0)
+            mMotionPlotCh3 = XYPlotAdapter(findViewById(R.id.motionPlot3), "Time (s)", "Acc (g)", 1.0)
         }
         if (deviceMacAddresses!!.size >= 4) {
-            mPlotCh4 = XYPlotAdapter(findViewById(R.id.ppgPlot4), false, 500, sampleRate = 4)
-            mMotionPlotCh4 = XYPlotAdapter(findViewById(R.id.motionPlot4), "Time (s)", "Acc (g)", 375.0)
+            mPlotCh4 = XYPlotAdapter(findViewById(R.id.ppgPlot4), 1.0)
+            mMotionPlotCh4 = XYPlotAdapter(findViewById(R.id.motionPlot4), "Time (s)", "Acc (g)", 1.0)
         }
         mXYPlotArray = arrayOf(mPlotCh1, mPlotCh2, mPlotCh3, mPlotCh4)
         mMotionPlotArray = arrayOf(mMotionPlotCh1, mMotionPlotCh2, mMotionPlotCh3, mMotionPlotCh4)
@@ -484,53 +483,69 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
-            for (i in 0 until mPPGArrayList.size) {
+            for (i in mPPGArrayList.indices) {
                 if (mPPGArrayList[i].mAddress == gatt.device.address) {
-                    mPPGArrayList[i].handleNewData(data)
-                    if (mPPGArrayList[i].packetGraphingCounter.toInt() == 1) {
-                        addToGraphBuffer(mPPGArrayList[i].dataBuffer, mPPGArrayList[i].dataBuffer.timeStampsDoubles!!)
-                        mPPGArrayList[i].saveAndResetBuffers()
+                    if (checkSyncAll(mPPGArrayList, mICMArrayList)) {
+                        mPPGArrayList[i].handleNewData(data)
+                        if (mPPGArrayList[i].packetGraphingCounter.toInt() == 1) {
+                            addToGraphBuffer(mPPGArrayList[i].dataBuffer, mPPGArrayList[i].dataBuffer.timeStampsDoubles!!)
+                            mPPGArrayList[i].saveAndResetBuffers()
+                        }
+                    } else {
+                        mPPGArrayList[i].sync = true
                     }
-                    return // we can return here because there's nothing left to do with this char
                 }
             }
         }
-
         if (AppConstant.CHAR_MPU_COMBINED == characteristic.uuid) {
             val dataPacket = characteristic.value
             getDataRateBytes(dataPacket.size) //+=240
-            for (i in 0 until mICMArrayList.size) {
+            for (i in mICMArrayList.indices) {
                 if (mICMArrayList[i].mAddress == gatt.device.address) {
-                    mICMArrayList[i].handleNewData(dataPacket)
-                    if (mICMArrayList[i].packetGraphingCounter.toInt() == 4) {
-                        addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        mICMArrayList[i].saveAndResetBuffers()
-                    }
-                    if (mICMArrayList[i].classificationCounter >= 1248) {
-                        val result = jpunchDetection(mICMArrayList[i].dataBufferAccX.classificationBuffer!!,
-                                mICMArrayList[i].dataBufferAccY.classificationBuffer!!,
-                                mICMArrayList[i].dataBufferAccZ.classificationBuffer!!, 250.0)
-                        mICMArrayList[i].resetClassificationBuffer()
-                        Log.e(TAG, "result, device #$i: ${Arrays.toString(result)}")
-                        mPunchDataSaverArray[i].saveTimestampedDoubleArray(mTimeStampTimeOnly, result)
-                        // print to screen
-                        runOnUiThread {
-                            if (result.isNotEmpty()) {
-                                val notificationString = "[${String.format(Locale.US, "%.2f", result[0])}, " +
-                                        "${String.format(Locale.US, "%.2f", result[1])}, " +
-                                        "${String.format(Locale.US, "%.2f", result[2])}]"
-                                mNotificationTextViews[i]!!.text = notificationString
-                            } else {
-                                mNotificationTextViews[i]!!.text = "[]"
+                    if (checkSyncAll(mPPGArrayList, mICMArrayList)) {
+                        mICMArrayList[i].handleNewData(dataPacket)
+                        if (mICMArrayList[i].packetGraphingCounter.toInt() == 4) {
+                            addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
+                            mICMArrayList[i].saveAndResetBuffers()
+                        }
+                        if (mICMArrayList[i].classificationCounter >= 1248) {
+                            val result = jpunchDetection(mICMArrayList[i].dataBufferAccX.classificationBuffer!!,
+                                    mICMArrayList[i].dataBufferAccY.classificationBuffer!!,
+                                    mICMArrayList[i].dataBufferAccZ.classificationBuffer!!, 250.0)
+                            mICMArrayList[i].resetClassificationBuffer()
+                            Log.e(TAG, "result, device #$i: ${Arrays.toString(result)}")
+                            mPunchDataSaverArray[i].saveTimestampedDoubleArray(mTimeStampTimeOnly, result)
+                            // print to screen
+                            runOnUiThread {
+                                if (result.isNotEmpty()) {
+                                    val notificationString = "[${String.format(Locale.US, "%.2f", result[0])}, " +
+                                            "${String.format(Locale.US, "%.2f", result[1])}, " +
+                                            "${String.format(Locale.US, "%.2f", result[2])}]"
+                                    mNotificationTextViews[i]!!.text = notificationString
+                                } else {
+                                    mNotificationTextViews[i]!!.text = "[]"
+                                }
                             }
                         }
+                    } else {
+                        mICMArrayList[i].sync = true
                     }
-                    return
                 }
             }
         }
+    }
+
+    private fun checkSyncAll(ppgDataArrayList: ArrayList<PPGData>, motionDataArrayList: ArrayList<MotionData>): Boolean {
+        var sum = 0
+        for (i in ppgDataArrayList.indices) {
+            sum += if (ppgDataArrayList[i].sync) 1 else 0
+        }
+        for (i in motionDataArrayList.indices) {
+            sum += if (motionDataArrayList[i].sync) 1 else 0
+        }
+        return sum == (motionDataArrayList.size + ppgDataArrayList.size)
     }
 
     private fun addToGraphBuffer(dataBuffer: DataBuffer, dataXValues: DoubleArray) {
