@@ -266,6 +266,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             mExGPlot = XYPlotAdapter(findViewById(R.id.emgPlot), false, 2000, sampleRate = 4)
         }
         mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4), findViewById(R.id.battery5))
+        mBatteryLevelTextViews = mBatteryLevelTextViews.filterNotNull().toTypedArray()
         mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2, mAccelPlotCh3, mAccelPlotCh4, mAccelPlotCh5)
         mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2, mGyroPlotCh3, mGyroPlotCh4, mGyroPlotCh5)
         val xyPlotList = listOf(mAccelPlotCh1?.xyPlot, mAccelPlotCh2?.xyPlot, mAccelPlotCh3?.xyPlot, mAccelPlotCh4?.xyPlot, mAccelPlotCh5?.xyPlot,
@@ -489,10 +490,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             getDataRateBytes(data.size)
             for (i in 0 until deviceMacAddresses!!.size) {
                 if (deviceMacAddresses!![i] == gatt.device.address) {
-                    mExGArrayList[i].handleNewData(data)
-                    if (mExGArrayList[i].packetGraphingCounter.toInt() == 4) {
-                        addToGraphBuffer(mExGArrayList[i].dataBuffer, mExGArrayList[i].dataBuffer.timeStampsDoubles!!)
-                        mExGArrayList[i].saveAndResetBuffers()
+                    mExGArrayList[mExGArrayList.lastIndex].handleNewData(data)
+                    if (mExGArrayList[mExGArrayList.lastIndex].packetGraphingCounter.toInt() == 4) {
+                        addToGraphBuffer(mExGArrayList[mExGArrayList.lastIndex].dataBuffer, mExGArrayList[mExGArrayList.lastIndex].dataBuffer.timeStampsDoubles!!)
+                        mExGArrayList[mExGArrayList.lastIndex].saveAndResetBuffers()
                         return
                     }
                 }
@@ -528,6 +529,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                         addToGraphBuffer(mICMArrayList[i].dataBufferGyrY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         addToGraphBuffer(mICMArrayList[i].dataBufferGyrZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
                         mICMArrayList[i].saveAndResetBuffers()
+                        return
                     }
                 }
             }
@@ -668,14 +670,14 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             else -> 1.0 // <3.6V
         }
         Log.e(TAG, "Device $address, BattVoltage: " + String.format(Locale.US, "%.3f", finalVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
-        status = address + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"
+        status = address/* + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"*/
         for (i in 0 until deviceMacAddresses?.size!!) {
             if (address == deviceMacAddresses!![i]) {
                 runOnUiThread {
                     if (finalPercent <= batteryWarning) {
                         mBatteryLevelTextViews[i]!!.setTextColor(Color.RED)
                         mBatteryLevelTextViews[i]!!.setTypeface(null, Typeface.BOLD)
-                        Toast.makeText(applicationContext, "Charge Battery, Battery Low $status", Toast.LENGTH_SHORT).show()
+//                        Toast.makeText(applicationContext, "Charge Battery, Battery Low $status", Toast.LENGTH_SHORT).show()
                     } else {
                         mBatteryLevelTextViews[i]!!.setTextColor(Color.GREEN)
                         mBatteryLevelTextViews[i]!!.setTypeface(null, Typeface.BOLD)

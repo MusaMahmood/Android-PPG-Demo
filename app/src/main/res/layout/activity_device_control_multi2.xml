@@ -230,8 +230,16 @@
         android:id="@+id/battery4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert4"
         app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
+
+    <TextView
+        android:id="@+id/battery5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert4"
         app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
 
 </android.support.constraint.ConstraintLayout>
