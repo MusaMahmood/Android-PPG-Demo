@@ -35,7 +35,7 @@ internal class XYPlotAdapter {
         this.xyPlot!!.rangeStepMode = StepMode.INCREMENT_BY_VAL
         this.xyPlot!!.setDomainLabel(domainLabel)
         this.xyPlot!!.setRangeLabel(rangeLabel)
-        this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.LEFT).format = DecimalFormat("#.###")
+        this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.LEFT).format = DecimalFormat("#.#")
         this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).format = DecimalFormat("#")
         this.xyPlot!!.setRangeBoundaries(-0.004, 0.004, BoundaryMode.AUTO)
         this.xyPlot!!.setRangeStep(StepMode.SUBDIVIDE, 5.0)
@@ -57,7 +57,7 @@ internal class XYPlotAdapter {
         this.xyPlot!!.rangeStepMode = StepMode.INCREMENT_BY_VAL
         this.xyPlot!!.setDomainLabel(domainLabel)
         this.xyPlot!!.setRangeLabel(rangeLabel)
-        this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.LEFT).format = DecimalFormat("#.###")
+        this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.LEFT).format = DecimalFormat("#.#")
         this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).format = DecimalFormat("#")
         this.xyPlot!!.setRangeBoundaries(-0.004, 0.004, BoundaryMode.AUTO)
         this.xyPlot!!.setRangeStep(StepMode.SUBDIVIDE, 5.0)

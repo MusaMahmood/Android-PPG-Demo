@@ -40,3 +40,4 @@ app/.externalNativeBuild/
 build/android-profile/
 build/
 app/gradleBuild/
+app/.cxx/

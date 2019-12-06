@@ -3,7 +3,7 @@ package com.yeolabgt.mahmoodms.upenndemo.dataProcessing
 import android.graphics.Color
 import java.util.*
 
-internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Int = 250, MSBFirst: Boolean = true, saveData: Boolean = true) :
+internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Int = 1000, MSBFirst: Boolean = true, saveData: Boolean = true) :
         BaseDataCollector(addressMac, uuid) {
     var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 375, "AccX", Color.RED)
     var dataBufferAccY: DataBuffer = DataBuffer(bufferSize, false, samplingRate, 375, "AccY", Color.GREEN)
@@ -62,7 +62,7 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileT
     fun saveAndResetBuffers() {
         this.resetBuffer()
         // Save data to file before resetting
-        this.dataSaver?.saveDoubleArrays(dataBufferAccX.timeStampsDoubles!!, dataBufferAccX.dataBufferDoubles!!, dataBufferAccY.dataBufferDoubles!!, dataBufferAccZ.dataBufferDoubles!!, dataBufferGyrX.dataBufferDoubles!!, dataBufferGyrY.dataBufferDoubles!!, dataBufferGyrZ.dataBufferDoubles!!)
+        this.dataSaver?.saveDoubleArrays(dataBufferAccX.systemTimeStampsDoubles!!, dataBufferAccX.dataBufferDoubles!!, dataBufferAccY.dataBufferDoubles!!, dataBufferAccZ.dataBufferDoubles!!, dataBufferGyrX.dataBufferDoubles!!, dataBufferGyrY.dataBufferDoubles!!, dataBufferGyrZ.dataBufferDoubles!!)
         this.dataBufferAccX.resetBuffer()
         this.dataBufferAccY.resetBuffer()
         this.dataBufferAccZ.resetBuffer()

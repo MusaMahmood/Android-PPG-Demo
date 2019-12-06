@@ -17,6 +17,12 @@ class AppConstant {
         // Char:
         internal val CHAR_STRAIN_GAUGE = UUID.fromString("0000a731-0000-1000-8000-00805f9b34fb")
         /**
+         * SpO2 Device
+         */
+        internal val SERVICE_SPO2 = UUID.fromString("228baec0-35fd-875f-39fe-b2a394d28057")
+        internal val CHAR_SPO2_CH1 = UUID.fromString("0000aec1-0000-1000-8000-00805f9b34fb")
+        internal val CHAR_SPO2_CH2 = UUID.fromString("0000aec2-0000-1000-8000-00805f9b34fb")
+        /**
          * For EEG:
          */
         internal val SERVICE_EEG_SIGNAL = UUID.fromString("228beef0-35fd-875f-39fe-b2a394d28057")

@@ -51,14 +51,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var mExGPlot: XYPlotAdapter? = null
     private var mAccelPlotCh1: XYPlotAdapter? = null
     private var mAccelPlotCh2: XYPlotAdapter? = null
-    private var mAccelPlotCh3: XYPlotAdapter? = null
-    private var mAccelPlotCh4: XYPlotAdapter? = null
-    private var mAccelPlotCh5: XYPlotAdapter? = null
+    private var mSpO2Ch1Plot: XYPlotAdapter? = null
+    private var mSpO2Ch2Plot: XYPlotAdapter? = null
     private var mGyroPlotCh1: XYPlotAdapter? = null
     private var mGyroPlotCh2: XYPlotAdapter? = null
-    private var mGyroPlotCh3: XYPlotAdapter? = null
-    private var mGyroPlotCh4: XYPlotAdapter? = null
-    private var mGyroPlotCh5: XYPlotAdapter? = null
     //Device Information
     private var mBleInitializedBoolean = false
     private lateinit var mBluetoothGattArray: Array<BluetoothGatt?>
@@ -82,6 +78,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private val batteryWarning = 20
     private var dataRate: Double = 0.toDouble()
     // ArrayList<DataType>
+    private var mSpO2ArrayList = ArrayList<SpO2Data>()
     private var mExGArrayList = ArrayList<ExGData>()
     private var mPPGArrayList = ArrayList<PPGData>()
     private var mICMArrayList = ArrayList<MotionData>()
@@ -101,18 +98,19 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         val deviceDisplayNames = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_NAMES)
         // Set content view based on number of devices connected:
         for (deviceName in deviceDisplayNames) {
-            if (deviceName.toLowerCase().contains("emg") ||
-                    deviceName.toLowerCase().contains("ecg")) {
+            if (deviceName.toLowerCase(Locale.ROOT).contains("emg") ||
+                    deviceName.toLowerCase(Locale.ROOT).contains("ecg")) {
                 // Contains EMG Data:
                 emgPresentFlag = true
                 break
             }
         }
-        if (emgPresentFlag) {
-            setContentView(R.layout.activity_device_control_multi2)
-        } else {
-            setContentView(R.layout.activity_device_control_multi)
-        }
+        setContentView(R.layout.activity_device_control_spo2)
+//        if (emgPresentFlag) {
+//            setContentView(R.layout.activity_device_control_multi2)
+//        } else {
+//            setContentView(R.layout.activity_device_control_multi)
+//        }
         mDeviceName = deviceDisplayNames[0]
         mDeviceAddress = deviceMacAddresses!![0]
         Log.d(TAG, "Device Names: " + Arrays.toString(deviceDisplayNames))
@@ -161,6 +159,12 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 motionData.dataBufferGyrZ.clearPlot()
                 motionData.dataBufferGyrZ.plotData = b
             }
+            for (spo2data in mSpO2ArrayList) {
+                spo2data.dataBuffer.clearPlot()
+                spo2data.dataBuffer.plotData = b
+            }
+            if (b) mRedrawer!!.pause()
+            else mRedrawer!!.start()
         }
         mExportButton.setOnClickListener { exportData() }
     }
@@ -186,6 +190,10 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", exg.dataSaver?.file!!)
             files.add(uii)
         }
+        for (spo2 in mSpO2ArrayList) {
+            val uii = FileProvider.getUriForFile(context, context.packageName + ".provider", spo2.dataSaver?.file!!)
+            files.add(uii)
+        }
         val exportData = Intent(Intent.ACTION_SEND_MULTIPLE)
         exportData.putExtra(Intent.EXTRA_SUBJECT, "Sensor Data Export Details")
         exportData.putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
@@ -204,6 +212,9 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
         for (motionData in mICMArrayList) {
             motionData.dataSaver?.terminateDataFileWriter()
+        }
+        for (spo2data in mSpO2ArrayList) {
+            spo2data.dataSaver?.terminateDataFileWriter()
         }
     }
 
@@ -246,31 +257,18 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         // Initialize our XYPlot reference:
         mAccelPlotCh1 = XYPlotAdapter(findViewById(R.id.accelPlot1), "Time (s)", "Acc (g)", 375.0)
         mGyroPlotCh1 = XYPlotAdapter(findViewById(R.id.gyroPlot1), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        if (deviceMacAddresses!!.size >= 2) {
-            mAccelPlotCh2 = XYPlotAdapter(findViewById(R.id.accelPlot2), "Time (s)", "Acc (g)", 375.0)
-            mGyroPlotCh2 = XYPlotAdapter(findViewById(R.id.gyroPlot2), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        }
-        if (deviceMacAddresses!!.size >= 3) {
-            mAccelPlotCh3 = XYPlotAdapter(findViewById(R.id.accelPlot3), "Time (s)", "Acc (g)", 375.0)
-            mGyroPlotCh3 = XYPlotAdapter(findViewById(R.id.gyroPlot3), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        }
-        if (deviceMacAddresses!!.size >= 4) {
-            mAccelPlotCh4 = XYPlotAdapter(findViewById(R.id.accelPlot4), "Time (s)", "Acc (g)", 375.0)
-            mGyroPlotCh4 = XYPlotAdapter(findViewById(R.id.gyroPlot4), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        }
-        if (deviceMacAddresses!!.size >= 5) {
-            mAccelPlotCh5 = XYPlotAdapter(findViewById(R.id.accelPlot5), "Time (s)", "Acc (g)", 375.0)
-            mGyroPlotCh5 = XYPlotAdapter(findViewById(R.id.gyroPlot5), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        }
+        mAccelPlotCh2 = XYPlotAdapter(findViewById(R.id.accelPlot2), "Time (s)", "Acc (g)", 375.0)
+        mGyroPlotCh2 = XYPlotAdapter(findViewById(R.id.gyroPlot2), "Time (s)", "Ang. Velocity (°/s)", 375.0)
+        mSpO2Ch1Plot = XYPlotAdapter(findViewById(R.id.spo2red), "Time (s)", "SpO2 (Red)", 250.0)
+        mSpO2Ch2Plot = XYPlotAdapter(findViewById(R.id.spo2ir), "Time (s)", "SpO2 (ir)", 250.0)
         if (emgPresentFlag) {
             mExGPlot = XYPlotAdapter(findViewById(R.id.emgPlot), false, 2000, sampleRate = 4)
         }
         mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4), findViewById(R.id.battery5))
         mBatteryLevelTextViews = mBatteryLevelTextViews.filterNotNull().toTypedArray()
-        mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2, mAccelPlotCh3, mAccelPlotCh4, mAccelPlotCh5)
-        mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2, mGyroPlotCh3, mGyroPlotCh4, mGyroPlotCh5)
-        val xyPlotList = listOf(mAccelPlotCh1?.xyPlot, mAccelPlotCh2?.xyPlot, mAccelPlotCh3?.xyPlot, mAccelPlotCh4?.xyPlot, mAccelPlotCh5?.xyPlot,
-                mGyroPlotCh1?.xyPlot, mGyroPlotCh2?.xyPlot, mGyroPlotCh3?.xyPlot, mGyroPlotCh4?.xyPlot, mGyroPlotCh5?.xyPlot, mExGPlot?.xyPlot)
+        mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2)
+        mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2)
+        val xyPlotList = listOf(mAccelPlotCh1?.xyPlot, mAccelPlotCh2?.xyPlot, mGyroPlotCh1?.xyPlot, mGyroPlotCh2?.xyPlot, mExGPlot?.xyPlot, mSpO2Ch1Plot?.xyPlot, mSpO2Ch2Plot?.xyPlot)
         mRedrawer = Redrawer(xyPlotList.filterNotNull(), 24f, false)
         mRedrawer!!.start()
         mXYPlotInitializedBoolean = true
@@ -372,16 +370,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == 1) {
-//            val context = applicationContext
-            //UI Stuff:
-//            val chSel = PreferencesFragment.channelSelect(context)
-            //File Save Stuff
-        }
-        super.onActivityResult(requestCode, resultCode, data)
-    }
-
     private fun launchSettingsMenu() {
         val intent = Intent(applicationContext, SettingsActivity::class.java)
         startActivityForResult(intent, 1)
@@ -429,6 +417,19 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     }
                 }
 
+                if (AppConstant.SERVICE_SPO2 == service.uuid) {
+                    if (service.getCharacteristic(AppConstant.CHAR_SPO2_CH1) != null) {
+                        mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_SPO2_CH1), true)
+                        mSpO2ArrayList.add(SpO2Data(0, gatt.device.address, AppConstant.CHAR_SPO2_CH1, mTimeStamp, channelName = "redled"))
+                        addGraphToPlot(mSpO2ArrayList[mSpO2ArrayList.lastIndex].dataBuffer, mSpO2Ch1Plot!!)
+                    }
+                    if (service.getCharacteristic(AppConstant.CHAR_SPO2_CH2) != null) {
+                        mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_SPO2_CH2), true)
+                        mSpO2ArrayList.add(SpO2Data(0, gatt.device.address, AppConstant.CHAR_SPO2_CH2, mTimeStamp, channelName = "irled"))
+                        addGraphToPlot(mSpO2ArrayList[mSpO2ArrayList.lastIndex].dataBuffer, mSpO2Ch2Plot!!)
+                    }
+                }
+
                 if (AppConstant.SERVICE_STRAIN_GAUGE == service.uuid) {
                     if (service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE), true)
@@ -444,8 +445,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 if (AppConstant.SERVICE_MPU == service.uuid) {
                     mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_MPU_COMBINED), true)
                     //Add to arrayList of devices/types
-                    mICMArrayList.add(MotionData(1250, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp))
-                    for (i in 0 until deviceMacAddresses!!.size) {
+                    mICMArrayList.add(MotionData(0, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp))
+                    for (i in mICMArrayList.indices) {
                         // Add ICM→GraphAdapters to corresponding plots.
                         if (gatt.device.address == deviceMacAddresses!![i]) {
                             addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferAccX, mAccelPlotArray[i]!!)
@@ -454,7 +455,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                             addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferGyrX, mGyroPlotArray[i]!!)
                             addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferGyrY, mGyroPlotArray[i]!!)
                             addGraphToPlot(mICMArrayList[mICMArrayList.lastIndex].dataBufferGyrZ, mGyroPlotArray[i]!!)
-                            break
                         }
                     }
                 }
@@ -488,13 +488,17 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_EEG_CH1_SIGNAL == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
-            for (i in 0 until deviceMacAddresses!!.size) {
-                if (deviceMacAddresses!![i] == gatt.device.address) {
-                    mExGArrayList[mExGArrayList.lastIndex].handleNewData(data)
-                    if (mExGArrayList[mExGArrayList.lastIndex].packetGraphingCounter.toInt() == 4) {
-                        addToGraphBuffer(mExGArrayList[mExGArrayList.lastIndex].dataBuffer, mExGArrayList[mExGArrayList.lastIndex].dataBuffer.timeStampsDoubles!!)
-                        mExGArrayList[mExGArrayList.lastIndex].saveAndResetBuffers()
+            for (i in mExGArrayList.indices) {
+                if (mExGArrayList[i].mAddress == gatt.device.address) {
+                    if (checkSyncAll(mExGArrayList, mICMArrayList)) {
+                        mExGArrayList[mExGArrayList.lastIndex].handleNewData(data)
+                        if (mExGArrayList[mExGArrayList.lastIndex].packetGraphingCounter.toInt() == 4) {
+                            addToGraphBuffer(mExGArrayList[mExGArrayList.lastIndex].dataBuffer, mExGArrayList[mExGArrayList.lastIndex].dataBuffer.timeStampsDoubles!!)
+                            mExGArrayList[mExGArrayList.lastIndex].saveAndResetBuffers()
+                        }
                         return
+                    } else {
+                        mExGArrayList[i].sync = true
                     }
                 }
             }
@@ -503,7 +507,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_STRAIN_GAUGE == characteristic.uuid) {
             val data = characteristic.value
             getDataRateBytes(data.size)
-            for (i in 0 until deviceMacAddresses!!.size) {
+            for (i in deviceMacAddresses!!.indices) {
                 if (deviceMacAddresses!![i] == gatt.device.address) {
                     mPPGArrayList[i].handleNewData(data)
                     if (mPPGArrayList[i].packetGraphingCounter.toInt() == 1) {
@@ -518,27 +522,70 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         if (AppConstant.CHAR_MPU_COMBINED == characteristic.uuid) {
             val dataPacket = characteristic.value
             getDataRateBytes(dataPacket.size) //+=240
-            for (i in 0 until deviceMacAddresses!!.size) {
-                if (deviceMacAddresses!![i] == gatt.device.address) {
+            for (i in mICMArrayList.indices) {
+                if (mICMArrayList[i].mAddress == gatt.device.address) {
+                    if (checkSyncAll(mExGArrayList, mICMArrayList)) {
                     mICMArrayList[i].handleNewData(dataPacket)
-                    if (mICMArrayList[i].packetGraphingCounter.toInt() == 4) {
-                        addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferGyrX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferGyrY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        addToGraphBuffer(mICMArrayList[i].dataBufferGyrZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!)
-                        mICMArrayList[i].saveAndResetBuffers()
-                        return
+                        if (mICMArrayList[i].packetGraphingCounter.toInt() == 4) {
+                            addToGraphBuffer(mICMArrayList[i].dataBufferAccX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!, downsample = true)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferAccY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!, downsample = true)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferAccZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!, downsample = true)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferGyrX, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!, downsample = true)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferGyrY, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!, downsample = true)
+                            addToGraphBuffer(mICMArrayList[i].dataBufferGyrZ, mICMArrayList[i].dataBufferAccX.timeStampsDoubles!!, downsample = true)
+                            mICMArrayList[i].saveAndResetBuffers()
+                        }
+                    } else {
+                        mICMArrayList[i].sync = true
                     }
+                }
+            }
+        }
+
+        if (AppConstant.CHAR_SPO2_CH1 == characteristic.uuid) {
+            val dataPacket = characteristic.value
+            getDataRateBytes(dataPacket.size)
+            for (i in mSpO2ArrayList.indices) {
+                if (mSpO2ArrayList[i].mUUID == characteristic.uuid) {
+                    mSpO2ArrayList[i].handleNewData(dataPacket)
+                    addToGraphBuffer(mSpO2ArrayList[i].dataBuffer, mSpO2ArrayList[i].dataBuffer.timeStampsDoubles!!)
+                    mSpO2ArrayList[i].saveAndResetBuffers()
+                }
+            }
+        }
+        if (AppConstant.CHAR_SPO2_CH2 == characteristic.uuid) {
+            val dataPacket = characteristic.value
+            getDataRateBytes(dataPacket.size)
+            for (i in mSpO2ArrayList.indices) {
+                if (mSpO2ArrayList[i].mUUID == characteristic.uuid) {
+                    mSpO2ArrayList[i].handleNewData(dataPacket)
+                    addToGraphBuffer(mSpO2ArrayList[i].dataBuffer, mSpO2ArrayList[i].dataBuffer.timeStampsDoubles!!)
+                    mSpO2ArrayList[i].saveAndResetBuffers()
                 }
             }
         }
     }
 
-    private fun addToGraphBuffer(dataBuffer: DataBuffer, dataXValues: DoubleArray) {
-        for (i in 0 until dataBuffer.dataBufferDoubles!!.size) {
-            dataBuffer.addDataPointTimeDomain(dataXValues[i], dataBuffer.dataBufferDoubles!![i])
+    private fun checkSyncAll(exgDataArrayList: ArrayList<ExGData>, motionDataArrayList: ArrayList<MotionData>): Boolean {
+        var sum = 0
+        for (i in motionDataArrayList.indices) {
+            sum += if (motionDataArrayList[i].sync) 1 else 0
+        }
+        for (i in exgDataArrayList.indices) {
+            sum += if (exgDataArrayList[i].sync) 1 else 0
+        }
+        return sum == (motionDataArrayList.size + exgDataArrayList.size)
+    }
+
+    private fun addToGraphBuffer(dataBuffer: DataBuffer, dataXValues: DoubleArray, downsample: Boolean = false) {
+        if (!downsample) {
+            for (i in dataBuffer.dataBufferDoubles!!.indices) {
+                dataBuffer.addDataPointTimeDomain(dataXValues[i], dataBuffer.dataBufferDoubles!![i])
+            }
+        } else {
+            for (i in 0 until dataBuffer.dataBufferDoubles!!.size/4) {
+                dataBuffer.addDataPointTimeDomain(dataXValues[i*4], dataBuffer.dataBufferDoubles!![i*4])
+            }
         }
     }
 
@@ -662,15 +709,15 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     }
 
     private fun updateBatteryStatus(voltage: Double, address: String) {
-        val status: String
+        val status: String = address
         val finalVoltage = voltage * 2.0 + 0.5 // Double voltage due to voltage divider in circuit
         val finalPercent: Double = when {
             finalVoltage >= 4.0 -> 100.0
-            finalVoltage < 4.0 && finalVoltage >= 3.6 -> ((finalVoltage-3.6)/0.4)*99 + 1
+            finalVoltage < 4.0 && finalVoltage >= 3.6 -> ((finalVoltage - 3.6) / 0.4) * 99 + 1
             else -> 1.0 // <3.6V
         }
         Log.e(TAG, "Device $address, BattVoltage: " + String.format(Locale.US, "%.3f", finalVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
-        status = address/* + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"*/
+        /* + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"*/
         for (i in 0 until deviceMacAddresses?.size!!) {
             if (address == deviceMacAddresses!![i]) {
                 runOnUiThread {
@@ -713,9 +760,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         const val HZ = "0 Hz"
         private val TAG = DeviceControlActivity::class.java.simpleName
         var mRedrawer: Redrawer? = null
-        //Data Channel Classes
-//        internal var mICM: MotionData? = null
-//        internal var mPPG: PPGData? = null
 
         init {
             System.loadLibrary("ecg-lib")

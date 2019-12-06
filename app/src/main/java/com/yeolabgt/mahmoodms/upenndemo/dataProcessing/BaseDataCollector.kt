@@ -17,6 +17,8 @@ open class BaseDataCollector(addressMac: String, uuid: UUID) {
     // Identifying info
     val mAddress: String
     val mUUID: UUID
+    // Graph and storage synchronization:
+    var sync: Boolean = false
 
 
     init {

@@ -9,6 +9,7 @@ class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = fal
     // For Timestamps:
     private val increment = 1/samplingRate.toDouble()
     var timeStampsDoubles: DoubleArray? = null
+    var systemTimeStampsDoubles: DoubleArray? = null
     private var totalDatapointIndex: Long = 0
     // Slide buffer Only
     private var slideBufferEnabled: Boolean = false
@@ -41,14 +42,21 @@ class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = fal
         }
         if (saveTimeStamps) {
             val timeStampsDoubleTemp = DoubleArray(doubleArray.size)
-            for (i in 0 until doubleArray.size) {
+            val systemTimeStampsDoubleTemp = DoubleArray(doubleArray.size)
+            for (i in doubleArray.indices) {
                 timeStampsDoubleTemp[i] = (totalDatapointIndex + i.toLong()).toDouble() * increment
+                systemTimeStampsDoubleTemp[i] = System.currentTimeMillis().toDouble()
             }
             totalDatapointIndex += doubleArray.size
             if (this.timeStampsDoubles != null) {
                 this.timeStampsDoubles = Doubles.concat(this.timeStampsDoubles, timeStampsDoubleTemp)
             } else {
                 this.timeStampsDoubles = timeStampsDoubleTemp
+            }
+            if (this.systemTimeStampsDoubles != null) {
+                this.systemTimeStampsDoubles = Doubles.concat(this.systemTimeStampsDoubles, systemTimeStampsDoubleTemp)
+            } else {
+                this.systemTimeStampsDoubles = systemTimeStampsDoubleTemp
             }
         }
         if (this.dataBufferDoubles != null) {
@@ -70,6 +78,7 @@ class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = fal
 
     fun resetBuffer() {
         this.timeStampsDoubles = null
+        this.systemTimeStampsDoubles = null
         this.dataBufferDoubles = null
     }
 

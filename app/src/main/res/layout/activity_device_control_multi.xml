@@ -40,7 +40,7 @@
     </LinearLayout>
 
     <com.androidplot.xy.XYPlot
-        android:id="@+id/accelPlot3"
+        android:id="@+id/spo2red"
         style="@style/APFullScreenGraph.Light.Minimalist"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -106,7 +106,7 @@
         app:renderMode="use_background_thread" />
 
     <com.androidplot.xy.XYPlot
-        android:id="@+id/gyroPlot3"
+        android:id="@+id/spo2ir"
         style="@style/APFullScreenGraph.Light.Minimalist"
         android:layout_width="0dp"
         android:layout_height="0dp"
