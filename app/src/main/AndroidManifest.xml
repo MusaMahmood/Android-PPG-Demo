@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.yeolabgt.mahmoodms.upenndemo">
+    package="com.yeolabgt.mahmoodms.multiimudemo">
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -28,7 +28,7 @@
         </provider>
 
         <activity
-            android:name="com.yeolabgt.mahmoodms.upenndemo.MainActivity"
+            android:name="com.yeolabgt.mahmoodms.multiimudemo.MainActivity"
             android:label="@string/main_activity_title">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -36,19 +36,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.yeolabgt.mahmoodms.upenndemo.DeviceControlActivity"
+        <activity android:name="com.yeolabgt.mahmoodms.multiimudemo.DeviceControlActivity"
             android:hardwareAccelerated="false"
             android:label="PPG Demo"
-            android:parentActivityName="com.yeolabgt.mahmoodms.upenndemo.MainActivity">
+            android:parentActivityName="com.yeolabgt.mahmoodms.multiimudemo.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.yeolabgt.mahmoodms.upenndemo.MainActivity" />
+                android:value="com.yeolabgt.mahmoodms.multiimudemo.MainActivity" />
         </activity>
-        <activity android:name="com.yeolabgt.mahmoodms.upenndemo.SettingsActivity"
+        <activity android:name="com.yeolabgt.mahmoodms.multiimudemo.SettingsActivity"
             android:label="Settings">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.yeolabgt.mahmoodms.upenndemo.DeviceControlActivity" />
+                android:value="com.yeolabgt.mahmoodms.multiimudemo.DeviceControlActivity" />
         </activity>
     </application>
 </manifest>

@@ -1,9 +1,9 @@
-package com.yeolabgt.mahmoodms.upenndemo.dataProcessing
+package com.yeolabgt.mahmoodms.multiimudemo.dataProcessing
 
 import android.graphics.Color
 import java.util.*
 
-internal class SpO2Data(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Int = 50, saveData: Boolean = true, channelName: String="LED") :
+internal class SpO2Data(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Double = 50.0, saveData: Boolean = true, channelName: String="LED") :
         BaseDataCollector(addressMac, uuid) {
     var dataBuffer: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 250, "SpO2 $channelName", Color.BLUE)
     var dataSaver: DataSaver? = null

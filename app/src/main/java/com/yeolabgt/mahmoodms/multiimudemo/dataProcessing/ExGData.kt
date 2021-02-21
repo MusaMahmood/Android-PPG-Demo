@@ -1,9 +1,9 @@
-package com.yeolabgt.mahmoodms.upenndemo.dataProcessing
+package com.yeolabgt.mahmoodms.multiimudemo.dataProcessing
 
 import android.graphics.Color
 import java.util.*
 
-internal class ExGData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Int = 250, saveData: Boolean = true, channelNumber: Int = 1) :
+internal class ExGData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Double = 250.0, saveData: Boolean = true, channelNumber: Int = 1) :
         BaseDataCollector(addressMac, uuid) {
     var dataBuffer: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 2000, "EMG Ch$channelNumber", Color.BLUE)
     var dataSaver: DataSaver? = null

@@ -1,9 +1,9 @@
-package com.yeolabgt.mahmoodms.upenndemo.dataProcessing
+package com.yeolabgt.mahmoodms.multiimudemo.dataProcessing
 
 import android.graphics.Color
 import java.util.*
 
-internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Int = 1000, MSBFirst: Boolean = true, saveData: Boolean = true) :
+internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileTimestamp: String, samplingRate: Double = 125.0, MSBFirst: Boolean = true, saveData: Boolean = true) :
         BaseDataCollector(addressMac, uuid) {
     var dataBufferAccX: DataBuffer = DataBuffer(bufferSize, true, samplingRate, 375, "AccX", Color.RED)
     var dataBufferAccY: DataBuffer = DataBuffer(bufferSize, false, samplingRate, 375, "AccY", Color.GREEN)

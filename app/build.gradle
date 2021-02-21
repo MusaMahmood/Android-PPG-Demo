@@ -25,7 +25,7 @@ project.ext.ASSET_DIR = getProjectDir().toString() + '/assets'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "com.yeolabgt.mahmoodms.upenndemo"
+        applicationId "com.yeolabgt.mahmoodms.multiimudemo"
         minSdkVersion 22
         targetSdkVersion 28
         versionCode 1
@@ -70,6 +70,7 @@ android {
         debug.setRoot('build-types/debug')
         release.setRoot('build-types/release')
     }
+    ndkVersion '21.0.6113669'
 }
 
 // Download default models; if you wish to use your own models then

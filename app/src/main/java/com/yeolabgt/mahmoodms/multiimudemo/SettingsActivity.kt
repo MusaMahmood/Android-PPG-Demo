@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.upenndemo
+package com.yeolabgt.mahmoodms.multiimudemo
 
 import android.app.Activity
 import android.os.Bundle

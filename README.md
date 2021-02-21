@@ -1,1 +1,1 @@
-# Android-PPG-Demo
+# Android-4-IMU-Demo

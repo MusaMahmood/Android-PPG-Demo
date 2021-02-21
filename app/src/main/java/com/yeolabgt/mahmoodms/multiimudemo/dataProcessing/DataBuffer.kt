@@ -1,13 +1,13 @@
-package com.yeolabgt.mahmoodms.upenndemo.dataProcessing
+package com.yeolabgt.mahmoodms.multiimudemo.dataProcessing
 
 import com.google.common.primitives.Doubles
 
-class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, samplingRate: Int = 0, seriesDataPoints: Int, seriesTitle: String="", color: Int):
+class DataBuffer(slideBufferSize: Int, private var saveTimeStamps: Boolean = false, samplingRate: Double = 0.0, seriesDataPoints: Int, seriesTitle: String="", color: Int):
         GraphAdapter(seriesDataPoints, seriesTitle, color) {
     // Buffer for graphing
     var dataBufferDoubles: DoubleArray? = null
     // For Timestamps:
-    private val increment = 1/samplingRate.toDouble()
+    private val increment = 1.0 / samplingRate
     var timeStampsDoubles: DoubleArray? = null
     var systemTimeStampsDoubles: DoubleArray? = null
     private var totalDatapointIndex: Long = 0

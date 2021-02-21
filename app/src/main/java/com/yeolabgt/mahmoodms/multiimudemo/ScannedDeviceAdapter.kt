@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.upenndemo
+package com.yeolabgt.mahmoodms.multiimudemo
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanRecord

@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.upenndemo
+package com.yeolabgt.mahmoodms.multiimudemo
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
@@ -29,9 +29,9 @@ import android.widget.ToggleButton
 
 import com.androidplot.util.Redrawer
 import com.yeolabgt.mahmoodms.actblelibrary.ActBle
-import com.yeolabgt.mahmoodms.upenndemo.dataProcessing.*
-import com.yeolabgt.mahmoodms.upenndemo.dataProcessing.MotionData
-import com.yeolabgt.mahmoodms.upenndemo.dataProcessing.PPGData
+import com.yeolabgt.mahmoodms.multiimudemo.dataProcessing.*
+import com.yeolabgt.mahmoodms.multiimudemo.dataProcessing.MotionData
+import com.yeolabgt.mahmoodms.multiimudemo.dataProcessing.PPGData
 
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -51,13 +51,17 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var mExGPlot: XYPlotAdapter? = null
     private var mAccelPlotCh1: XYPlotAdapter? = null
     private var mAccelPlotCh2: XYPlotAdapter? = null
-    private var mSpO2Ch1Plot: XYPlotAdapter? = null
-    private var mSpO2Ch2Plot: XYPlotAdapter? = null
+    private var mAccelPlotCh3: XYPlotAdapter? = null
+    private var mAccelPlotCh4: XYPlotAdapter? = null
     private var mGyroPlotCh1: XYPlotAdapter? = null
     private var mGyroPlotCh2: XYPlotAdapter? = null
+    private var mGyroPlotCh3: XYPlotAdapter? = null
+    private var mGyroPlotCh4: XYPlotAdapter? = null
     //Device Information
     private var mBleInitializedBoolean = false
     private lateinit var mBluetoothGattArray: Array<BluetoothGatt?>
+    private lateinit var mSamplingRateArray: Array<Double?>
+    private var mAddressToSamplingRateMap: Map<String, Double?>? = null
     private var mActBle: ActBle? = null
     private var mDeviceName: String? = null
     private var mDeviceAddress: String? = null
@@ -105,7 +109,8 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 break
             }
         }
-        setContentView(R.layout.activity_device_control_spo2)
+//        setContentView(R.layout.activity_device_control_spo2)
+        setContentView(R.layout.activity_device_control_multi)
 //        if (emgPresentFlag) {
 //            setContentView(R.layout.activity_device_control_multi2)
 //        } else {
@@ -245,9 +250,21 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
         mActBle = ActBle(this, mBluetoothManager, this)
         mBluetoothGattArray = Array(deviceMacAddresses!!.size) { i -> mActBle!!.connect(mBluetoothDeviceArray[i]) }
+        mSamplingRateArray = Array(deviceMacAddresses!!.size) {i -> 0.0}
+//        val mMap  = mapOf(mBluetoothGattArray to mSamplingRateArray)
+//        val mMap = Map<> = mBluetoothGattArray.zip(mSamplingRateArray)
         for (i in mBluetoothDeviceArray.indices) {
             Log.e(TAG, "Connecting to Device: " + (mBluetoothDeviceArray[i]!!.name + " " + mBluetoothDeviceArray[i]!!.address))
-//            val str = mBluetoothDeviceArray[i]!!.name.toLowerCase()
+            val str = mBluetoothDeviceArray[i]!!.name.toLowerCase(Locale.ROOT)
+            if (str.contains("icm8")) { // timer is set to
+                mSamplingRateArray[i] = 125.0
+            } else if (str.contains("icm4")) {
+                mSamplingRateArray[i] = 250.0
+            } else {
+                mSamplingRateArray[i] = 250.0
+            }
+            Log.e(TAG, "Device: ${mBluetoothDeviceArray[i]!!.name}, Sampling: ${mSamplingRateArray[i]}")
+            mAddressToSamplingRateMap = deviceMacAddresses!!.zip(mSamplingRateArray).toMap()
         }
         if (!mXYPlotInitializedBoolean) setupXYPlot()
         mBleInitializedBoolean = true
@@ -256,19 +273,18 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private fun setupXYPlot() {
         // Initialize our XYPlot reference:
         mAccelPlotCh1 = XYPlotAdapter(findViewById(R.id.accelPlot1), "Time (s)", "Acc (g)", 375.0)
-        mGyroPlotCh1 = XYPlotAdapter(findViewById(R.id.gyroPlot1), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         mAccelPlotCh2 = XYPlotAdapter(findViewById(R.id.accelPlot2), "Time (s)", "Acc (g)", 375.0)
+        mAccelPlotCh3 = XYPlotAdapter(findViewById(R.id.accelPlot3), "Time (s)", "Acc (g)", 375.0)
+        mAccelPlotCh4 = XYPlotAdapter(findViewById(R.id.accelPlot4), "Time (s)", "Acc (g)", 375.0)
+        mGyroPlotCh1 = XYPlotAdapter(findViewById(R.id.gyroPlot1), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         mGyroPlotCh2 = XYPlotAdapter(findViewById(R.id.gyroPlot2), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        mSpO2Ch1Plot = XYPlotAdapter(findViewById(R.id.spo2red), "Time (s)", "SpO2 (Red)", 250.0)
-        mSpO2Ch2Plot = XYPlotAdapter(findViewById(R.id.spo2ir), "Time (s)", "SpO2 (ir)", 250.0)
-        if (emgPresentFlag) {
-            mExGPlot = XYPlotAdapter(findViewById(R.id.emgPlot), false, 2000, sampleRate = 4)
-        }
+        mGyroPlotCh3 = XYPlotAdapter(findViewById(R.id.gyroPlot3), "Time (s)", "Ang. Velocity (°/s)", 375.0)
+        mGyroPlotCh4 = XYPlotAdapter(findViewById(R.id.gyroPlot4), "Time (s)", "Ang. Velocity (°/s)", 375.0)
         mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4), findViewById(R.id.battery5))
         mBatteryLevelTextViews = mBatteryLevelTextViews.filterNotNull().toTypedArray()
-        mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2)
-        mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2)
-        val xyPlotList = listOf(mAccelPlotCh1?.xyPlot, mAccelPlotCh2?.xyPlot, mGyroPlotCh1?.xyPlot, mGyroPlotCh2?.xyPlot, mExGPlot?.xyPlot, mSpO2Ch1Plot?.xyPlot, mSpO2Ch2Plot?.xyPlot)
+        mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2, mAccelPlotCh3, mAccelPlotCh4)
+        mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2, mGyroPlotCh3, mGyroPlotCh4)
+        val xyPlotList = listOf(mAccelPlotCh1?.xyPlot, mAccelPlotCh2?.xyPlot, mGyroPlotCh1?.xyPlot, mGyroPlotCh2?.xyPlot)
         mRedrawer = Redrawer(xyPlotList.filterNotNull(), 24f, false)
         mRedrawer!!.start()
         mXYPlotInitializedBoolean = true
@@ -417,19 +433,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                     }
                 }
 
-                if (AppConstant.SERVICE_SPO2 == service.uuid) {
-                    if (service.getCharacteristic(AppConstant.CHAR_SPO2_CH1) != null) {
-                        mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_SPO2_CH1), true)
-                        mSpO2ArrayList.add(SpO2Data(0, gatt.device.address, AppConstant.CHAR_SPO2_CH1, mTimeStamp, channelName = "redled"))
-                        addGraphToPlot(mSpO2ArrayList[mSpO2ArrayList.lastIndex].dataBuffer, mSpO2Ch1Plot!!)
-                    }
-                    if (service.getCharacteristic(AppConstant.CHAR_SPO2_CH2) != null) {
-                        mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_SPO2_CH2), true)
-                        mSpO2ArrayList.add(SpO2Data(0, gatt.device.address, AppConstant.CHAR_SPO2_CH2, mTimeStamp, channelName = "irled"))
-                        addGraphToPlot(mSpO2ArrayList[mSpO2ArrayList.lastIndex].dataBuffer, mSpO2Ch2Plot!!)
-                    }
-                }
-
                 if (AppConstant.SERVICE_STRAIN_GAUGE == service.uuid) {
                     if (service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE) != null) {
                         mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_STRAIN_GAUGE), true)
@@ -445,7 +448,11 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 if (AppConstant.SERVICE_MPU == service.uuid) {
                     mActBle!!.setCharacteristicNotifications(gatt, service.getCharacteristic(AppConstant.CHAR_MPU_COMBINED), true)
                     //Add to arrayList of devices/types
-                    mICMArrayList.add(MotionData(0, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp))
+                    mICMArrayList.add(MotionData(0, gatt.device.address, AppConstant.CHAR_MPU_COMBINED, mTimeStamp, mAddressToSamplingRateMap!![gatt.device.address] ?: error("Value Null!")))
+                    // TODO: TEMP
+                    runOnUiThread {
+                        Toast.makeText(applicationContext, "Adding Device: ${gatt.device.address}, with Sampling Rate: ${mAddressToSamplingRateMap!![gatt.device.address] ?: error("Value Null!")}", Toast.LENGTH_LONG).show()
+                    }
                     for (i in mICMArrayList.indices) {
                         // Add ICM→GraphAdapters to corresponding plots.
                         if (gatt.device.address == deviceMacAddresses!![i]) {
@@ -717,7 +724,6 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
             else -> 1.0 // <3.6V
         }
         Log.e(TAG, "Device $address, BattVoltage: " + String.format(Locale.US, "%.3f", finalVoltage) + "V : " + String.format(Locale.US, "%.3f", finalPercent) + "%")
-        /* + " (" + String.format(Locale.US, "%.1f", finalPercent) + "%)"*/
         for (i in 0 until deviceMacAddresses?.size!!) {
             if (address == deviceMacAddresses!![i]) {
                 runOnUiThread {

@@ -1,4 +1,4 @@
-package com.yeolabgt.mahmoodms.upenndemo
+package com.yeolabgt.mahmoodms.multiimudemo
 
 import android.Manifest
 import android.app.Activity
@@ -24,8 +24,7 @@ import android.widget.AdapterView
 import android.widget.Button
 import android.widget.ListView
 import android.widget.Toast
-
-import java.util.ArrayList
+import java.util.*
 
 /**
  * Created by mahmoodms on 6/30/2016.
@@ -47,8 +46,19 @@ class MainActivity : Activity() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             runOnUiThread {
                 if (!mDeviceAddressesMAC.contains(result.device.address)) {
-                    scannedDeviceAdapter!!.update(result.device, result.rssi, result.scanRecord)
-                    scannedDeviceAdapter!!.notifyDataSetChanged()
+                    val namelc = if (result.device.name != null) result.device.name?.toLowerCase(Locale.ROOT) else "empty"
+                    if (namelc!!.contains("eeg") || namelc.contains("icm")) {
+                        mDeviceNames.add(result.device.name)
+                        mDeviceAddressesMAC.add(result.device.address)
+                        mDevicesSelectedCount++
+                        selectedDeviceAdapter!!.update(result.device, result.rssi, result.scanRecord!!)
+                        selectedDeviceAdapter!!.notifyDataSetChanged()
+                        Toast.makeText(this@MainActivity, "Device Selected: "
+                                + result.device.name + "\n" + result.device.address , Toast.LENGTH_SHORT).show()
+                    } else {
+                        scannedDeviceAdapter!!.update(result.device, result.rssi, result.scanRecord!!)
+                        scannedDeviceAdapter!!.notifyDataSetChanged()
+                    }
                 }
             }
             super.onScanResult(callbackType, result)
