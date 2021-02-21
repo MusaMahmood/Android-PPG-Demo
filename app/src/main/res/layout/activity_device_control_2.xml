@@ -40,34 +40,12 @@
     </LinearLayout>
 
     <com.androidplot.xy.XYPlot
-        android:id="@+id/accelPlot3"
-        style="@style/APFullScreenGraph.Light.Minimalist"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-        app:renderMode="use_background_thread" />
-
-    <com.androidplot.xy.XYPlot
-        android:id="@+id/accelPlot4"
-        style="@style/APFullScreenGraph.Light.Minimalist"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
-        app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-        app:renderMode="use_background_thread" />
-
-    <com.androidplot.xy.XYPlot
         android:id="@+id/accelPlot1"
         style="@style/APFullScreenGraph.Light.Minimalist"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
         app:renderMode="use_background_thread" />
@@ -78,9 +56,11 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
+        app:layout_constraintVertical_bias="0.0"
         app:renderMode="use_background_thread" />
 
     <com.androidplot.xy.XYPlot
@@ -89,30 +69,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
-        app:renderMode="use_background_thread" />
-
-    <com.androidplot.xy.XYPlot
-        android:id="@+id/gyroPlot3"
-        style="@style/APFullScreenGraph.Light.Minimalist"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
-        app:renderMode="use_background_thread" />
-
-    <com.androidplot.xy.XYPlot
-        android:id="@+id/gyroPlot4"
-        style="@style/APFullScreenGraph.Light.Minimalist"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
         app:layout_constraintTop_toTopOf="@+id/guidelineHorz"
         app:renderMode="use_background_thread" />
 
@@ -122,8 +80,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@+id/guidelineHorz"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
         app:renderMode="use_background_thread" />
 
@@ -159,7 +117,7 @@
         android:id="@+id/battery1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert1"
+        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
 
@@ -167,24 +125,8 @@
         android:id="@+id/battery2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert1"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
-
-    <TextView
-        android:id="@+id/battery3"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toStartOf="@+id/guidelineVert3"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
-        app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
-
-    <TextView
-        android:id="@+id/battery4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/guidelineVert3"
+        app:layout_constraintStart_toStartOf="@+id/guidelineVert2"
         app:layout_constraintTop_toTopOf="@+id/guidelineHorz" />
 
 </android.support.constraint.ConstraintLayout>

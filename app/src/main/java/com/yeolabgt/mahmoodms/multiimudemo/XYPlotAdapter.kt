@@ -26,11 +26,11 @@ internal class XYPlotAdapter {
      * @param rangeLabel y-axis label
      * @param domainIncrement x-axis increment
      */
-    constructor(findViewByID: View, domainLabel: String, rangeLabel: String, domainIncrement: Double) {
+    constructor(findViewByID: View, domainLabel: String, rangeLabel: String, historySeconds: Int) {
         this.xyPlot = findViewByID as XYPlot
         this.xyPlot!!.setDomainBoundaries(0, 1, BoundaryMode.AUTO) //Default
         this.xyPlot!!.domainStepMode = StepMode.INCREMENT_BY_VAL
-        this.xyPlot!!.domainStepValue = domainIncrement
+        this.xyPlot!!.domainStepValue = (historySeconds / 2).toDouble()
         //Default Config:
         this.xyPlot!!.rangeStepMode = StepMode.INCREMENT_BY_VAL
         this.xyPlot!!.setDomainLabel(domainLabel)
@@ -41,9 +41,9 @@ internal class XYPlotAdapter {
         this.xyPlot!!.setRangeStep(StepMode.SUBDIVIDE, 5.0)
     }
 
-    constructor(findViewByID: View, plotImplicitXVals: Boolean, historySize: Int, sampleRate: Int=250, domainLabel: String="Time (s)", rangeLabel: String="Voltage (V)") {
+    constructor(findViewByID: View, plotImplicitXVals: Boolean, historySize: Int) {
         this.xyPlot = findViewByID as XYPlot
-        val historySeconds = historySize / sampleRate
+        val historySeconds = historySize / 250
         if (plotImplicitXVals) {
             this.xyPlot!!.setDomainBoundaries(0, historySize, BoundaryMode.FIXED)
             this.xyPlot!!.domainStepMode = StepMode.INCREMENT_BY_VAL
@@ -55,9 +55,9 @@ internal class XYPlotAdapter {
         }
         //Default Config:
         this.xyPlot!!.rangeStepMode = StepMode.INCREMENT_BY_VAL
-        this.xyPlot!!.setDomainLabel(domainLabel)
-        this.xyPlot!!.setRangeLabel(rangeLabel)
-        this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.LEFT).format = DecimalFormat("#.#")
+        this.xyPlot!!.setDomainLabel("Time (seconds)")
+        this.xyPlot!!.setRangeLabel("Voltage (mV)")
+        this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.LEFT).format = DecimalFormat("#.###")
         this.xyPlot!!.graph.getLineLabelStyle(XYGraphWidget.Edge.BOTTOM).format = DecimalFormat("#")
         this.xyPlot!!.setRangeBoundaries(-0.004, 0.004, BoundaryMode.AUTO)
         this.xyPlot!!.setRangeStep(StepMode.SUBDIVIDE, 5.0)

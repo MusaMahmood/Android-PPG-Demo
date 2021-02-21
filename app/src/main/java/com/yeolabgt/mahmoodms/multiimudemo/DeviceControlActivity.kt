@@ -68,6 +68,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
     private var mConnected: Boolean = false
     //Connecting to Multiple Devices
     private var deviceMacAddresses: Array<String>? = null
+    private var mNumberOfDevices = 0
     //UI Elements - TextViews, Buttons, etc
     private lateinit var mBatteryLevelTextViews: Array<TextView?>
     private var mDataRate: TextView? = null
@@ -97,6 +98,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         //Receive Intents:
         val intent = intent
         deviceMacAddresses = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_KEY)
+        mNumberOfDevices = deviceMacAddresses!!.size
         //Set orientation of device based on screen type/size:
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         val deviceDisplayNames = intent.getStringArrayExtra(MainActivity.INTENT_DEVICES_NAMES)
@@ -109,13 +111,11 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
                 break
             }
         }
-//        setContentView(R.layout.activity_device_control_spo2)
-        setContentView(R.layout.activity_device_control_multi)
-//        if (emgPresentFlag) {
-//            setContentView(R.layout.activity_device_control_multi2)
-//        } else {
-//            setContentView(R.layout.activity_device_control_multi)
-//        }
+        when (mNumberOfDevices) {
+            1 -> setContentView(R.layout.activity_device_control_1)
+            2 -> setContentView(R.layout.activity_device_control_2)
+            else -> setContentView(R.layout.activity_device_control_multi)
+        }
         mDeviceName = deviceDisplayNames[0]
         mDeviceAddress = deviceMacAddresses!![0]
         Log.d(TAG, "Device Names: " + Arrays.toString(deviceDisplayNames))
@@ -250,7 +250,7 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
         }
         mActBle = ActBle(this, mBluetoothManager, this)
         mBluetoothGattArray = Array(deviceMacAddresses!!.size) { i -> mActBle!!.connect(mBluetoothDeviceArray[i]) }
-        mSamplingRateArray = Array(deviceMacAddresses!!.size) {i -> 0.0}
+        mSamplingRateArray = Array(deviceMacAddresses!!.size) {0.0}
 //        val mMap  = mapOf(mBluetoothGattArray to mSamplingRateArray)
 //        val mMap = Map<> = mBluetoothGattArray.zip(mSamplingRateArray)
         for (i in mBluetoothDeviceArray.indices) {
@@ -272,15 +272,19 @@ class DeviceControlActivity : Activity(), ActBle.ActBleListener {
 
     private fun setupXYPlot() {
         // Initialize our XYPlot reference:
-        mAccelPlotCh1 = XYPlotAdapter(findViewById(R.id.accelPlot1), "Time (s)", "Acc (g)", 375.0)
-        mAccelPlotCh2 = XYPlotAdapter(findViewById(R.id.accelPlot2), "Time (s)", "Acc (g)", 375.0)
-        mAccelPlotCh3 = XYPlotAdapter(findViewById(R.id.accelPlot3), "Time (s)", "Acc (g)", 375.0)
-        mAccelPlotCh4 = XYPlotAdapter(findViewById(R.id.accelPlot4), "Time (s)", "Acc (g)", 375.0)
-        mGyroPlotCh1 = XYPlotAdapter(findViewById(R.id.gyroPlot1), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        mGyroPlotCh2 = XYPlotAdapter(findViewById(R.id.gyroPlot2), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        mGyroPlotCh3 = XYPlotAdapter(findViewById(R.id.gyroPlot3), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        mGyroPlotCh4 = XYPlotAdapter(findViewById(R.id.gyroPlot4), "Time (s)", "Ang. Velocity (°/s)", 375.0)
-        mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4), findViewById(R.id.battery5))
+        mAccelPlotCh1 = XYPlotAdapter(findViewById(R.id.accelPlot1), "Time (s)", "Acc (g)", 4)
+        mGyroPlotCh1 = XYPlotAdapter(findViewById(R.id.gyroPlot1), "Time (s)", "Ang. Velocity (°/s)", 4)
+        if (mNumberOfDevices > 1) {
+            mAccelPlotCh2 = XYPlotAdapter(findViewById(R.id.accelPlot2), "Time (s)", "Acc (g)", 4)
+            mGyroPlotCh2 = XYPlotAdapter(findViewById(R.id.gyroPlot2), "Time (s)", "Ang. Velocity (°/s)", 4)
+        }
+        if (mNumberOfDevices > 2) {
+            mAccelPlotCh3 = XYPlotAdapter(findViewById(R.id.accelPlot3), "Time (s)", "Acc (g)", 4)
+            mGyroPlotCh3 = XYPlotAdapter(findViewById(R.id.gyroPlot3), "Time (s)", "Ang. Velocity (°/s)", 4)
+            mAccelPlotCh4 = XYPlotAdapter(findViewById(R.id.accelPlot4), "Time (s)", "Acc (g)", 4)
+            mGyroPlotCh4 = XYPlotAdapter(findViewById(R.id.gyroPlot4), "Time (s)", "Ang. Velocity (°/s)", 4)
+        }
+        mBatteryLevelTextViews = arrayOf(findViewById(R.id.battery1), findViewById(R.id.battery2), findViewById(R.id.battery3), findViewById(R.id.battery4))
         mBatteryLevelTextViews = mBatteryLevelTextViews.filterNotNull().toTypedArray()
         mAccelPlotArray = arrayOf(mAccelPlotCh1, mAccelPlotCh2, mAccelPlotCh3, mAccelPlotCh4)
         mGyroPlotArray = arrayOf(mGyroPlotCh1, mGyroPlotCh2, mGyroPlotCh3, mGyroPlotCh4)

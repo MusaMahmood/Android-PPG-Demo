@@ -62,7 +62,7 @@ internal class MotionData(bufferSize: Int, addressMac: String, uuid: UUID, fileT
     fun saveAndResetBuffers() {
         this.resetBuffer()
         // Save data to file before resetting
-        this.dataSaver?.saveDoubleArrays(dataBufferAccX.systemTimeStampsDoubles!!, dataBufferAccX.dataBufferDoubles!!, dataBufferAccY.dataBufferDoubles!!, dataBufferAccZ.dataBufferDoubles!!, dataBufferGyrX.dataBufferDoubles!!, dataBufferGyrY.dataBufferDoubles!!, dataBufferGyrZ.dataBufferDoubles!!)
+        this.dataSaver?.saveDoubleArrays(dataBufferAccX.timeStampsDoubles!!, dataBufferAccX.dataBufferDoubles!!, dataBufferAccY.dataBufferDoubles!!, dataBufferAccZ.dataBufferDoubles!!, dataBufferGyrX.dataBufferDoubles!!, dataBufferGyrY.dataBufferDoubles!!, dataBufferGyrZ.dataBufferDoubles!!)
         this.dataBufferAccX.resetBuffer()
         this.dataBufferAccY.resetBuffer()
         this.dataBufferAccZ.resetBuffer()
